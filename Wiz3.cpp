@@ -1,4 +1,4 @@
-// Wiz3.cpp : ƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“ ƒtƒ@ƒCƒ‹
+ï»¿// Wiz3.cpp : ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³ ãƒ•ã‚¡ã‚¤ãƒ«
 //
 
 #include "stdafx.h"
@@ -15,8 +15,25 @@ static char THIS_FILE[] = __FILE__;
 extern int mSel;
 extern CString mWiz3List;
 
+static BOOL IsValidIPv4Address(const CString& value)
+{
+	int a, b, c, d;
+	char tail;
+	if (sscanf((LPCTSTR)value, "%d.%d.%d.%d%c", &a, &b, &c, &d, &tail) != 4)
+		return FALSE;
+	return a >= 0 && a <= 255 && b >= 0 && b <= 255 &&
+		c >= 0 && c <= 255 && d >= 0 && d <= 255;
+}
+
+static BOOL IsValidDomainName(const CString& value)
+{
+	if (value.IsEmpty() || value.Find('.') <= 0 || value.Find(' ') >= 0)
+		return FALSE;
+	return value[0] != '.' && value[value.GetLength() - 1] != '.';
+}
+
 /////////////////////////////////////////////////////////////////////////////
-// CWiz3 ƒvƒƒpƒeƒB ƒy[ƒW
+// CWiz3 ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ ãƒšãƒ¼ã‚¸
 
 IMPLEMENT_DYNCREATE(CWiz3, CPropertyPage)
 
@@ -57,26 +74,56 @@ BEGIN_MESSAGE_MAP(CWiz3, CPropertyPage)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
-// CWiz3 ƒƒbƒZ[ƒW ƒnƒ“ƒhƒ‰
+// CWiz3 ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒãƒ³ãƒ‰ãƒ©
 
 LRESULT CWiz3::OnWizardNext() 
 {
-	// TODO: ‚±‚ÌˆÊ’u‚ÉŒÅ—L‚Ìˆ—‚ğ’Ç‰Á‚·‚é‚©A‚Ü‚½‚ÍŠî–{ƒNƒ‰ƒX‚ğŒÄ‚Ño‚µ‚Ä‚­‚¾‚³‚¢
+	// TODO: ã“ã®ä½ç½®ã«å›ºæœ‰ã®å‡¦ç†ã‚’è¿½åŠ ã™ã‚‹ã‹ã€ã¾ãŸã¯åŸºæœ¬ã‚¯ãƒ©ã‚¹ã‚’å‘¼ã³å‡ºã—ã¦ãã ã•ã„
     UpdateData(TRUE);
+	m_Name1.TrimLeft(); m_Name1.TrimRight();
+	m_Name2.TrimLeft(); m_Name2.TrimRight();
+	m_Name3.TrimLeft(); m_Name3.TrimRight();
+	m_IP1.TrimLeft(); m_IP1.TrimRight();
+	m_IP2.TrimLeft(); m_IP2.TrimRight();
+	m_IP3.TrimLeft(); m_IP3.TrimRight();
+	if (!IsValidDomainName(m_Name1)) {
+		AfxMessageBox("ç®¡ç†ã™ã‚‹ãƒ‰ãƒ¡ã‚¤ãƒ³åã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚\nä¾‹: example.jp", MB_OK | MB_ICONEXCLAMATION);
+		GetDlgItem(IDC_EDIT_NAME1)->SetFocus();
+		return -1;
+	}
+	if (mSel == 0 && !IsValidIPv4Address(m_IP1)) {
+		AfxMessageBox("ãƒ‰ãƒ¡ã‚¤ãƒ³1ã®æ­£ã—ã„ IPv4 ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚", MB_OK | MB_ICONEXCLAMATION);
+		GetDlgItem(IDC_EDIT_IP1)->SetFocus();
+		return -1;
+	}
+	if (!m_Name2.IsEmpty() || !m_IP2.IsEmpty()) {
+		if (!IsValidDomainName(m_Name2) || !IsValidIPv4Address(m_IP2)) {
+			AfxMessageBox("ãƒ‰ãƒ¡ã‚¤ãƒ³2ã¯ã€ãƒ‰ãƒ¡ã‚¤ãƒ³åã¨IPv4ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’ä¸¡æ–¹æ­£ã—ãå…¥åŠ›ã—ã¦ãã ã•ã„ã€‚", MB_OK | MB_ICONEXCLAMATION);
+			GetDlgItem(IDC_EDIT_NAME2)->SetFocus();
+			return -1;
+		}
+	}
+	if (!m_Name3.IsEmpty() || !m_IP3.IsEmpty()) {
+		if (!IsValidDomainName(m_Name3) || !IsValidIPv4Address(m_IP3)) {
+			AfxMessageBox("ãƒ‰ãƒ¡ã‚¤ãƒ³3ã¯ã€ãƒ‰ãƒ¡ã‚¤ãƒ³åã¨IPv4ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’ä¸¡æ–¹æ­£ã—ãå…¥åŠ›ã—ã¦ãã ã•ã„ã€‚", MB_OK | MB_ICONEXCLAMATION);
+			GetDlgItem(IDC_EDIT_NAME3)->SetFocus();
+			return -1;
+		}
+	}
     CString m, ms;
     m.LoadString( IDS_STRING110 );
 	CHAR mData[1024];
     sprintf(mData, m, (char *)((const char *)m_Name1), (char *)((const char *)m_IP1), (char *)((const char *)m_Name2), (char *)((const char *)m_IP2), (char *)((const char *)m_Name3), (char *)((const char *)m_IP3));
     mWiz3List = (CString)mData;
 	/*
-    if (GetUserDefaultLangID() != (LANGID)0x0411) { // “ú–{ŒêˆÈŠO
+    if (GetUserDefaultLangID() != (LANGID)0x0411) { // æ—¥æœ¬èªä»¥å¤–
 	  mWiz3List = (CString) "Domain name to manage\n Domain name1 " + m_Name1 + (CString)" " + m_IP1 + (CString)"\n";
 	  mWiz3List += (CString) " Domain name2 " + m_Name2 + (CString)" " + m_IP2 + (CString)"\n";
 	  mWiz3List += (CString) " Domain name3 " + m_Name3 + (CString)" " + m_IP3 + (CString)"\n\n";
 	} else {
-	  mWiz3List = (CString) "ŠÇ—‚·‚éƒhƒƒCƒ“–¼\n@ƒhƒƒCƒ“‚P@" + m_Name1 + (CString)" " + m_IP1 + (CString)"\n";
-	  mWiz3List += (CString) "@ƒhƒƒCƒ“‚Q@" + m_Name2 + (CString)" " + m_IP2 + (CString)"\n";
-	  mWiz3List += (CString) "@ƒhƒƒCƒ“‚R@" + m_Name3 + (CString)" " + m_IP3 + (CString)"\n\n";
+	  mWiz3List = (CString) "ç®¡ç†ã™ã‚‹ãƒ‰ãƒ¡ã‚¤ãƒ³å\nã€€ãƒ‰ãƒ¡ã‚¤ãƒ³ï¼‘ã€€" + m_Name1 + (CString)" " + m_IP1 + (CString)"\n";
+	  mWiz3List += (CString) "ã€€ãƒ‰ãƒ¡ã‚¤ãƒ³ï¼’ã€€" + m_Name2 + (CString)" " + m_IP2 + (CString)"\n";
+	  mWiz3List += (CString) "ã€€ãƒ‰ãƒ¡ã‚¤ãƒ³ï¼“ã€€" + m_Name3 + (CString)" " + m_IP3 + (CString)"\n\n";
 	}
 	*/
     UpdateData(FALSE);
@@ -86,7 +133,7 @@ LRESULT CWiz3::OnWizardNext()
 
 BOOL CWiz3::OnSetActive() 
 {
-	// TODO: ‚±‚ÌˆÊ’u‚ÉŒÅ—L‚Ìˆ—‚ğ’Ç‰Á‚·‚é‚©A‚Ü‚½‚ÍŠî–{ƒNƒ‰ƒX‚ğŒÄ‚Ño‚µ‚Ä‚­‚¾‚³‚¢
+	// TODO: ã“ã®ä½ç½®ã«å›ºæœ‰ã®å‡¦ç†ã‚’è¿½åŠ ã™ã‚‹ã‹ã€ã¾ãŸã¯åŸºæœ¬ã‚¯ãƒ©ã‚¹ã‚’å‘¼ã³å‡ºã—ã¦ãã ã•ã„
     UpdateData(TRUE);
 
 	if (mSel == 0) {
@@ -118,7 +165,7 @@ void CWiz3::OnShowWindow(BOOL bShow, UINT nStatus)
 {
 	CPropertyPage::OnShowWindow(bShow, nStatus);
 	
-	// TODO: ‚±‚ÌˆÊ’u‚ÉƒƒbƒZ[ƒW ƒnƒ“ƒhƒ‰—p‚ÌƒR[ƒh‚ğ’Ç‰Á‚µ‚Ä‚­‚¾‚³‚¢
+	// TODO: ã“ã®ä½ç½®ã«ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒãƒ³ãƒ‰ãƒ©ç”¨ã®ã‚³ãƒ¼ãƒ‰ã‚’è¿½åŠ ã—ã¦ãã ã•ã„
 	if (bShow) {
       UpdateData(TRUE);
 	  CPropertySheet* pSheet = (CPropertySheet*)GetParent();
@@ -127,7 +174,7 @@ void CWiz3::OnShowWindow(BOOL bShow, UINT nStatus)
 	  CHAR mTitle[128];
       sprintf(mTitle, m, "3");
 	  pSheet->SetTitle(mTitle, 0);
-	  //pSheet->SetTitle("SPA-PRO Mail Server ŠÈ’PƒZƒbƒgƒAƒbƒvƒEƒBƒU[ƒh(ƒXƒeƒbƒv@‚V)", 0);
+	  //pSheet->SetTitle("SPA-PRO Mail Server ç°¡å˜ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—ã‚¦ã‚£ã‚¶ãƒ¼ãƒ‰(ã‚¹ãƒ†ãƒƒãƒ—ã€€ï¼—)", 0);
       UpdateData(FALSE);
 	}
 	

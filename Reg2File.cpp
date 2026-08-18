@@ -1,5 +1,5 @@
-///////////////////////////////////////////////////////////
-// ƒŒƒWƒXƒgƒŠî•ñ‚ÌŠÇ—‚ğƒtƒHƒ‹ƒ_‚Åˆ—
+ï»¿///////////////////////////////////////////////////////////
+// ãƒ¬ã‚¸ã‚¹ãƒˆãƒªæƒ…å ±ã®ç®¡ç†ã‚’ãƒ•ã‚©ãƒ«ãƒ€ã§å‡¦ç†
 // Copyright K-TEC Corp. K.Kawakami
 ///////////////////////////////////////////////////////////
 #include "stdafx.h"
@@ -10,7 +10,7 @@
 
 #ifdef REGTOFILE
 ///////////////////////////////////////////////////////////
-// ƒŒƒWƒXƒgƒŠî•ñ•ÛŠÇƒtƒHƒ‹ƒ_‚Ìì¬
+// ãƒ¬ã‚¸ã‚¹ãƒˆãƒªæƒ…å ±ä¿ç®¡ãƒ•ã‚©ãƒ«ãƒ€ã®ä½œæˆ
 ///////////////////////////////////////////////////////////
 DWORD FileCreateKey(char *pKeyRoot, char *pKey) {
   char mKeyName[256];
@@ -27,41 +27,41 @@ DWORD FileCreateKey(char *pKeyRoot, char *pKey) {
   }
   while(p) {
     *p = '\x0';
-    _mkdir(mKeyName);         // ˆ——pƒtƒHƒ‹ƒ_ì¬
+    _mkdir(mKeyName);         // å‡¦ç†ç”¨ãƒ•ã‚©ãƒ«ãƒ€ä½œæˆ
     *p = '\\';
      p = strstr(p+1,"\\");
   }
-  _mkdir(mKeyName);         // ˆ——pƒtƒHƒ‹ƒ_ì¬
+  _mkdir(mKeyName);         // å‡¦ç†ç”¨ãƒ•ã‚©ãƒ«ãƒ€ä½œæˆ
 
   return ERROR_SUCCESS;
 }
 
 ///////////////////////////////////////////////////////////
-// ’è‹`ƒtƒ@ƒCƒ‹‚Ì”r‘¼ƒAƒNƒZƒX‚ğ‰Â”\‚É‚·‚é
+// å®šç¾©ãƒ•ã‚¡ã‚¤ãƒ«ã®æ’ä»–ã‚¢ã‚¯ã‚»ã‚¹ã‚’å¯èƒ½ã«ã™ã‚‹
 ///////////////////////////////////////////////////////////
 DWORD OpenKeyFile(char *pKeyRoot, char *pKey, char *pValue, HANDLE *hFile) {
   char mKeyLock[256];
   HANDLE             hF;
   WIN32_FIND_DATA    FD;
 
-  // ƒtƒHƒ‹ƒ_‚Ì‘¶İ‚ğŠm”F
+  // ãƒ•ã‚©ãƒ«ãƒ€ã®å­˜åœ¨ã‚’ç¢ºèª
   sprintf(mKeyLock, "%s\\reg\\%s*", pKeyRoot, pKey);
   hF = FindFirstFile(mKeyLock, &FD);
-  if (hF == INVALID_HANDLE_VALUE) // ƒtƒHƒ‹ƒ_‚ª–³‚¢‘¶İ‚µ‚È‚¢
+  if (hF == INVALID_HANDLE_VALUE) // ãƒ•ã‚©ãƒ«ãƒ€ãŒç„¡ã„ï¼å­˜åœ¨ã—ãªã„
     return -1;
   FindClose( hF ); 
 
   sprintf(mKeyLock, "%s\\reg\\%s%s.lck", pKeyRoot, pKey, pValue);
   while ((*hFile = CreateFile((LPCTSTR)mKeyLock,
                         GENERIC_WRITE,
-                        0,   // ”r‘¼ƒAƒNƒZƒX = 0
+                        0,   // æ’ä»–ã‚¢ã‚¯ã‚»ã‚¹ = 0
                         NULL,
                         CREATE_ALWAYS,
                         FILE_ATTRIBUTE_NORMAL, 
                         NULL)) == INVALID_HANDLE_VALUE) {
     //if (bServiceTerminating) 
       //return -1;
-    _sleep(0); //WAIT_TIME);
+    Sleep(0); //WAIT_TIME);
   } 
   return ERROR_SUCCESS;
 }
@@ -72,7 +72,7 @@ DWORD KeyFileQueryValueEx(char *pKeyRoot, char *pKey, char *pValue, HANDLE hFile
   FILE *fp;
 
     switch(dwType) {
-       case REG_BINARY: memset(pRet, 0, *nSize); // ƒNƒŠƒA
+       case REG_BINARY: memset(pRet, 0, *nSize); // ã‚¯ãƒªã‚¢
                         sprintf(mKeyName, "%s\\reg\\%s%s.0", pKeyRoot, pKey, pValue);
                         if ((fp = fopen(mKeyName, "rb"))) {
                           *nSize = fread(pRet, sizeof(char), *nSize, fp);
@@ -82,13 +82,13 @@ DWORD KeyFileQueryValueEx(char *pKeyRoot, char *pKey, char *pValue, HANDLE hFile
 		    break;
        case REG_DWORD: sprintf(mKeyName, "%s\\reg\\%s%s.1", pKeyRoot, pKey, pValue);
                        if ((fp = fopen(mKeyName, "rt"))) {
-                          fscanf(fp, "%lu", pRet);
+                          fscanf(fp, "%lu", (DWORD *)pRet);
                           *nSize = sizeof(DWORD);
                           fclose(fp);
                           nSts = ERROR_SUCCESS;
                        }
  	            break;
-       case REG_NONE:  // –³‹
+       case REG_NONE:  // ç„¡è¦–
 		    break;
        default:     sprintf(mKeyName, "%s\\reg\\%s%s.2", pKeyRoot, pKey, pValue);
                     if ((fp = fopen(mKeyName, "rt"))) { // REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ, 
@@ -125,7 +125,7 @@ DWORD KeyFileSetValueEx(char *pKeyRoot, char *pKey, char *pValue, HANDLE hFile, 
                           nSts = ERROR_SUCCESS;
                        }
  	            break;
-       case REG_NONE:  // –³‹
+       case REG_NONE:  // ç„¡è¦–
 		    break;
        default:     sprintf(mKeyName, "%s\\reg\\%s%s.2", pKeyRoot, pKey, pValue);
                     if ((fp = fopen(mKeyName, "wt"))) { // REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ, 
@@ -164,9 +164,9 @@ DWORD KeyFileEnumValue(char *pKeyRoot, char *pKey, DWORD nIndex, char *pValue, D
  if (hF != INVALID_HANDLE_VALUE) {
     bFile = TRUE;
     while (bFile) {
-	  if (!(!stricmp(FD.cFileName, ".") ||
-	        !stricmp(FD.cFileName, "..") ||
-	        !stricmp(FD.cFileName, ".lck") ||
+	  if (!(!_stricmp(FD.cFileName, ".") ||
+	        !_stricmp(FD.cFileName, "..") ||
+	        !_stricmp(FD.cFileName, ".lck") ||
 	        strstr(FD.cFileName, ".lck") ||
 			FD.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)) {
         if (n == nIndex) {
@@ -215,10 +215,10 @@ DWORD KeyFileEnumKey(char *pKeyRoot, char *pKey, DWORD nIndex, char *pValue, DWO
    if (hF != INVALID_HANDLE_VALUE) {
       bFile = TRUE;
       while (bFile) {
-		/// ƒfƒBƒŒƒNƒgƒŠ‚Ì‚İ•\¦
+		/// ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®ã¿è¡¨ç¤º
 		if (FD.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY) {
-	      if (!(!stricmp(FD.cFileName, ".") ||
-	            !stricmp(FD.cFileName, ".."))) {
+	      if (!(!_stricmp(FD.cFileName, ".") ||
+	            !_stricmp(FD.cFileName, ".."))) {
             if (n == nIndex) {
               if (pValue) {
                 strcpy(pValue, FD.cFileName);

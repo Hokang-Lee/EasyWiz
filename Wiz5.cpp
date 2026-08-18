@@ -1,4 +1,4 @@
-// Wiz5.cpp : ƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“ ƒtƒ@ƒCƒ‹
+ï»¿// Wiz5.cpp : ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³ ãƒ•ã‚¡ã‚¤ãƒ«
 //
 
 #include "stdafx.h"
@@ -33,7 +33,7 @@ extern CString mWiz8List;
 extern CString mWiz7List;
 #endif
 /////////////////////////////////////////////////////////////////////////////
-// CWiz5 ƒvƒƒpƒeƒB ƒy[ƒW
+// CWiz5 ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ ãƒšãƒ¼ã‚¸
 
 IMPLEMENT_DYNCREATE(CWiz5, CPropertyPage)
 
@@ -64,23 +64,32 @@ BEGIN_MESSAGE_MAP(CWiz5, CPropertyPage)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
-// CWiz5 ƒƒbƒZ[ƒW ƒnƒ“ƒhƒ‰
+// CWiz5 ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒãƒ³ãƒ‰ãƒ©
 
 BOOL CWiz5::OnSetActive() 
 {
-	// TODO: ‚±‚ÌˆÊ’u‚ÉŒÅ—L‚Ìˆ—‚ğ’Ç‰Á‚·‚é‚©A‚Ü‚½‚ÍŠî–{ƒNƒ‰ƒX‚ğŒÄ‚Ño‚µ‚Ä‚­‚¾‚³‚¢
+	// TODO: ã“ã®ä½ç½®ã«å›ºæœ‰ã®å‡¦ç†ã‚’è¿½åŠ ã™ã‚‹ã‹ã€ã¾ãŸã¯åŸºæœ¬ã‚¯ãƒ©ã‚¹ã‚’å‘¼ã³å‡ºã—ã¦ãã ã•ã„
 	CPropertySheet* pSheet = (CPropertySheet*)GetParent();
 	ASSERT_KINDOF(CPropertySheet, pSheet);
-	pSheet->SetWizardButtons( PSWIZB_BACK | PSWIZB_NEXT | PSWIZB_FINISH);
+	// ç¢ºèªãƒšãƒ¼ã‚¸ã§ã¯ã€Œæ¬¡ã¸ã€ã‚’è¡¨ç¤ºã›ãšã€æ“ä½œã‚’ã€Œæˆ»ã‚‹ã€ã‹ã€Œå®Œäº†ã€ã«çµã‚‹ã€‚
+	pSheet->SetWizardButtons(PSWIZB_BACK | PSWIZB_FINISH);
 
 	return CPropertyPage::OnSetActive();
+}
+
+BOOL CWiz5::OnWizardFinish()
+{
+	if (AfxMessageBox("è¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹å†…å®¹ã§è¨­å®šã‚’ä¿å­˜ã—ã¾ã™ã€‚\næ—¢å­˜ã®è¨­å®šã¯ä¸Šæ›¸ãã•ã‚Œã¾ã™ã€‚ç¶šè¡Œã—ã¾ã™ã‹ï¼Ÿ",
+		MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
+		return FALSE;
+	return CPropertyPage::OnWizardFinish();
 }
 
 BOOL CWiz5::OnInitDialog() 
 {
 	CPropertyPage::OnInitDialog();
 	
-	// TODO: ‚±‚ÌˆÊ’u‚É‰Šú‰»‚Ì•â‘«ˆ—‚ğ’Ç‰Á‚µ‚Ä‚­‚¾‚³‚¢
+	// TODO: ã“ã®ä½ç½®ã«åˆæœŸåŒ–ã®è£œè¶³å‡¦ç†ã‚’è¿½åŠ ã—ã¦ãã ã•ã„
     UpdateData(TRUE);
 
 #ifdef REGTOFILE
@@ -114,13 +123,13 @@ BOOL CWiz5::OnInitDialog()
 #endif
     UpdateData(FALSE);
 
-	return TRUE;  // ƒRƒ“ƒgƒ[ƒ‹‚ÉƒtƒH[ƒJƒX‚ğİ’è‚µ‚È‚¢‚Æ‚«A–ß‚è’l‚Í TRUE ‚Æ‚È‚è‚Ü‚·
-	              // —áŠO: OCX ƒvƒƒpƒeƒB ƒy[ƒW‚Ì–ß‚è’l‚Í FALSE ‚Æ‚È‚è‚Ü‚·
+	return TRUE;  // ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã«ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã‚’è¨­å®šã—ãªã„ã¨ãã€æˆ»ã‚Šå€¤ã¯ TRUE ã¨ãªã‚Šã¾ã™
+	              // ä¾‹å¤–: OCX ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ ãƒšãƒ¼ã‚¸ã®æˆ»ã‚Šå€¤ã¯ FALSE ã¨ãªã‚Šã¾ã™
 }
 
 LRESULT CWiz5::OnWizardBack() 
 {
-	// TODO: ‚±‚ÌˆÊ’u‚ÉŒÅ—L‚Ìˆ—‚ğ’Ç‰Á‚·‚é‚©A‚Ü‚½‚ÍŠî–{ƒNƒ‰ƒX‚ğŒÄ‚Ño‚µ‚Ä‚­‚¾‚³‚¢
+	// TODO: ã“ã®ä½ç½®ã«å›ºæœ‰ã®å‡¦ç†ã‚’è¿½åŠ ã™ã‚‹ã‹ã€ã¾ãŸã¯åŸºæœ¬ã‚¯ãƒ©ã‚¹ã‚’å‘¼ã³å‡ºã—ã¦ãã ã•ã„
 	CPropertySheet* pSheet = (CPropertySheet*)GetParent();
 	ASSERT_KINDOF(CPropertySheet, pSheet);
 	pSheet->SetWizardButtons( PSWIZB_BACK | PSWIZB_NEXT);
@@ -132,7 +141,7 @@ void CWiz5::OnShowWindow(BOOL bShow, UINT nStatus)
 {
 	CPropertyPage::OnShowWindow(bShow, nStatus);
 	
-	// TODO: ‚±‚ÌˆÊ’u‚ÉƒƒbƒZ[ƒW ƒnƒ“ƒhƒ‰—p‚ÌƒR[ƒh‚ğ’Ç‰Á‚µ‚Ä‚­‚¾‚³‚¢
+	// TODO: ã“ã®ä½ç½®ã«ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒãƒ³ãƒ‰ãƒ©ç”¨ã®ã‚³ãƒ¼ãƒ‰ã‚’è¿½åŠ ã—ã¦ãã ã•ã„
 	if (bShow) {
       UpdateData(TRUE);
 	  CPropertySheet* pSheet = (CPropertySheet*)GetParent();
@@ -157,7 +166,7 @@ void CWiz5::OnShowWindow(BOOL bShow, UINT nStatus)
 #endif
 #endif
 	  pSheet->SetTitle(mTitle, 0);
-	  //pSheet->SetTitle("SPA-PRO Mail Server ŠÈ’PƒZƒbƒgƒAƒbƒvƒEƒBƒU[ƒh(ƒXƒeƒbƒv@‚V)", 0);
+	  //pSheet->SetTitle("SPA-PRO Mail Server ç°¡å˜ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—ã‚¦ã‚£ã‚¶ãƒ¼ãƒ‰(ã‚¹ãƒ†ãƒƒãƒ—ã€€ï¼—)", 0);
       UpdateData(FALSE);
 	}
 

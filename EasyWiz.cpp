@@ -1,4 +1,4 @@
-// EasyWiz.cpp : ƒAƒvƒŠƒP[ƒVƒ‡ƒ“—pƒNƒ‰ƒX‚Ì’è‹`‚ğs‚¢‚Ü‚·B
+ï»¿// EasyWiz.cpp : ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ç”¨ã‚¯ãƒ©ã‚¹ã®å®šç¾©ã‚’è¡Œã„ã¾ã™ã€‚
 //
 
 #include "stdafx.h"
@@ -57,47 +57,47 @@ NET_API_STATUS AddLocalGroupAccount(CHAR *lpszContry, CHAR *lpszDomain, CHAR *lp
 
 BEGIN_MESSAGE_MAP(CEasyWizApp, CWinApp)
 	//{{AFX_MSG_MAP(CEasyWizApp)
-		// ƒƒ‚ - ClassWizard ‚Í‚±‚ÌˆÊ’u‚Éƒ}ƒbƒsƒ“ƒO—p‚Ìƒ}ƒNƒ‚ğ’Ç‰Á‚Ü‚½‚Ííœ‚µ‚Ü‚·B
-		//        ‚±‚ÌˆÊ’u‚É¶¬‚³‚ê‚éƒR[ƒh‚ğ•ÒW‚µ‚È‚¢‚Å‚­‚¾‚³‚¢B
+		// ãƒ¡ãƒ¢ - ClassWizard ã¯ã“ã®ä½ç½®ã«ãƒãƒƒãƒ”ãƒ³ã‚°ç”¨ã®ãƒã‚¯ãƒ­ã‚’è¿½åŠ ã¾ãŸã¯å‰Šé™¤ã—ã¾ã™ã€‚
+		//        ã“ã®ä½ç½®ã«ç”Ÿæˆã•ã‚Œã‚‹ã‚³ãƒ¼ãƒ‰ã‚’ç·¨é›†ã—ãªã„ã§ãã ã•ã„ã€‚
 	//}}AFX_MSG
 	ON_COMMAND(ID_HELP, CWinApp::OnHelp)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
-// CEasyWizApp ƒNƒ‰ƒX‚Ì\’z
+// CEasyWizApp ã‚¯ãƒ©ã‚¹ã®æ§‹ç¯‰
 
 CEasyWizApp::CEasyWizApp()
 {
-	// TODO: ‚±‚ÌˆÊ’u‚É\’z—p‚ÌƒR[ƒh‚ğ’Ç‰Á‚µ‚Ä‚­‚¾‚³‚¢B
-	// ‚±‚±‚É InitInstance ’†‚Ìd—v‚È‰Šú‰»ˆ—‚ğ‚·‚×‚Ä‹Lq‚µ‚Ä‚­‚¾‚³‚¢B
+	// TODO: ã“ã®ä½ç½®ã«æ§‹ç¯‰ç”¨ã®ã‚³ãƒ¼ãƒ‰ã‚’è¿½åŠ ã—ã¦ãã ã•ã„ã€‚
+	// ã“ã“ã« InitInstance ä¸­ã®é‡è¦ãªåˆæœŸåŒ–å‡¦ç†ã‚’ã™ã¹ã¦è¨˜è¿°ã—ã¦ãã ã•ã„ã€‚
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// —Bˆê‚Ì CEasyWizApp ƒIƒuƒWƒFƒNƒg
+// å”¯ä¸€ã® CEasyWizApp ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 
 CEasyWizApp theApp;
 
 /////////////////////////////////////////////////////////////////////////////
-// CEasyWizApp ƒNƒ‰ƒX‚Ì‰Šú‰»
+// CEasyWizApp ã‚¯ãƒ©ã‚¹ã®åˆæœŸåŒ–
 
 BOOL CEasyWizApp::InitInstance()
 {
 	AfxEnableControlContainer();
 
-	// •W€“I‚È‰Šú‰»ˆ—
-	// ‚à‚µ‚±‚ê‚ç‚Ì‹@”\‚ğg—p‚¹‚¸AÀsƒtƒ@ƒCƒ‹‚ÌƒTƒCƒY‚ğ¬‚³‚­‚µ‚½‚¯
-	//  ‚ê‚ÎˆÈ‰º‚Ì“Á’è‚Ì‰Šú‰»ƒ‹[ƒ`ƒ“‚Ì’†‚©‚ç•s•K—v‚È‚à‚Ì‚ğíœ‚µ‚Ä
-	//  ‚­‚¾‚³‚¢B
+	// æ¨™æº–çš„ãªåˆæœŸåŒ–å‡¦ç†
+	// ã‚‚ã—ã“ã‚Œã‚‰ã®æ©Ÿèƒ½ã‚’ä½¿ç”¨ã›ãšã€å®Ÿè¡Œãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚µã‚¤ã‚ºã‚’å°ã•ãã—ãŸã‘
+	//  ã‚Œã°ä»¥ä¸‹ã®ç‰¹å®šã®åˆæœŸåŒ–ãƒ«ãƒ¼ãƒãƒ³ã®ä¸­ã‹ã‚‰ä¸å¿…è¦ãªã‚‚ã®ã‚’å‰Šé™¤ã—ã¦
+	//  ãã ã•ã„ã€‚
 
-#ifdef _AFXDLL
-	Enable3dControls();			// ‹¤—L DLL “à‚Å MFC ‚ğg‚¤ê‡‚Í‚±‚±‚ğƒR[ƒ‹‚µ‚Ä‚­‚¾‚³‚¢B
-#else
-	Enable3dControlsStatic();	// MFC ‚ÆÃ“I‚ÉƒŠƒ“ƒN‚·‚éê‡‚Í‚±‚±‚ğƒR[ƒ‹‚µ‚Ä‚­‚¾‚³‚¢B
+#if _MSC_VER < 1300 && defined(_AFXDLL)
+	Enable3dControls();			// å…±æœ‰ DLL å†…ã§ MFC ã‚’ä½¿ã†å ´åˆã¯ã“ã“ã‚’ã‚³ãƒ¼ãƒ«ã—ã¦ãã ã•ã„ã€‚
+#elif _MSC_VER < 1300
+	Enable3dControlsStatic();	// MFC ã¨é™çš„ã«ãƒªãƒ³ã‚¯ã™ã‚‹å ´åˆã¯ã“ã“ã‚’ã‚³ãƒ¼ãƒ«ã—ã¦ãã ã•ã„ã€‚
 #endif
 
     StartSheet();
-	// ƒ_ƒCƒAƒƒO‚ª•Â‚¶‚ç‚ê‚Ä‚©‚çƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ÌƒƒbƒZ[ƒW ƒ|ƒ“ƒv‚ğŠJn‚·‚é‚æ‚è‚ÍA
-	// ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ğI—¹‚·‚é‚½‚ß‚É FALSE ‚ğ•Ô‚µ‚Ä‚­‚¾‚³‚¢B
+	// ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ãŒé–‰ã˜ã‚‰ã‚Œã¦ã‹ã‚‰ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒãƒ³ãƒ—ã‚’é–‹å§‹ã™ã‚‹ã‚ˆã‚Šã¯ã€
+	// ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã‚’çµ‚äº†ã™ã‚‹ãŸã‚ã« FALSE ã‚’è¿”ã—ã¦ãã ã•ã„ã€‚
 	return FALSE;
 }
 
@@ -126,9 +126,9 @@ void CEasyWizApp::StartSheet()
    char      *p, mPath[256], mFn[256], mCmpName[256], mMMLISTFn[256];
 
 #ifdef E_POST
-   CPropertySheet cPropSheet("E-Post Mail Server ŠÈ’Pİ’èƒEƒBƒU[ƒh");
+   CPropertySheet cPropSheet("E-Post Mail Server ç°¡å˜è¨­å®šã‚¦ã‚£ã‚¶ãƒ¼ãƒ‰");
 #else
-   CPropertySheet cPropSheet("SPA-PRO Mail Server ŠÈ’Pİ’èƒEƒBƒU[ƒh");
+   CPropertySheet cPropSheet("SPA-PRO Mail Server ç°¡å˜è¨­å®šã‚¦ã‚£ã‚¶ãƒ¼ãƒ‰");
 #endif
 
   cPropSheet.AddPage(&Wiz1);
@@ -140,7 +140,7 @@ void CEasyWizApp::StartSheet()
 #ifdef REGTOFILE
   cPropSheet.AddPage(&Wiz8);
 #endif
-#ifdef LGWAN                 ////// LGWANŠÂ‹«ƒeƒ“ƒvƒŒ[ƒg
+#ifdef LGWAN                 ////// LGWANç’°å¢ƒãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆ
   cPropSheet.AddPage(&Wiz6);
   cPropSheet.AddPage(&Wiz7);
 #endif
@@ -176,46 +176,46 @@ void CEasyWizApp::StartSheet()
 	sprintf(mMMLISTFn, "%s\\mmlist.dat", mPath);
   } else {
     strcpy(mFn, "epstms.chg");
-	sprintf(mMMLISTFn, "mmlist.dat", mPath);
+	strcpy(mMMLISTFn, "mmlist.dat");
   }
   
   if ((fp = fopen(mFn, "wt"))) {
     fprintf(fp, "REGEDIT4\n");
 	GetReg(fp, "SOFTWARE\\EMWAC");
-    GetReg(fp, "SOFTWARE\\SPA-PRO"); // ‹Œƒo[ƒWƒ‡ƒ“‚Ìİ’èƒf[ƒ^‚ğƒoƒbƒNƒAƒbƒv
-    GetReg(fp, "SYSTEM\\CurrentControlSet\\Services\\SPARS-PRO"); // ‹Œƒo[ƒWƒ‡ƒ“‚Ìİ’èƒf[ƒ^‚ğƒoƒbƒNƒAƒbƒv
-    GetReg(fp, "SYSTEM\\CurrentControlSet\\Services\\SPADS-PRO"); // ‹Œƒo[ƒWƒ‡ƒ“‚Ìİ’èƒf[ƒ^‚ğƒoƒbƒNƒAƒbƒv
-    GetReg(fp, "SYSTEM\\CurrentControlSet\\Services\\SPAPOP3S-PRO"); // ‹Œƒo[ƒWƒ‡ƒ“‚Ìİ’èƒf[ƒ^‚ğƒoƒbƒNƒAƒbƒv
-    GetReg(fp, "SYSTEM\\CurrentControlSet\\Services\\SPAIMAP4S-PRO"); // ‹Œƒo[ƒWƒ‡ƒ“‚Ìİ’èƒf[ƒ^‚ğƒoƒbƒNƒAƒbƒv
+    GetReg(fp, "SOFTWARE\\SPA-PRO"); // æ—§ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã®è¨­å®šãƒ‡ãƒ¼ã‚¿ã‚’ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—
+    GetReg(fp, "SYSTEM\\CurrentControlSet\\Services\\SPARS-PRO"); // æ—§ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã®è¨­å®šãƒ‡ãƒ¼ã‚¿ã‚’ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—
+    GetReg(fp, "SYSTEM\\CurrentControlSet\\Services\\SPADS-PRO"); // æ—§ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã®è¨­å®šãƒ‡ãƒ¼ã‚¿ã‚’ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—
+    GetReg(fp, "SYSTEM\\CurrentControlSet\\Services\\SPAPOP3S-PRO"); // æ—§ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã®è¨­å®šãƒ‡ãƒ¼ã‚¿ã‚’ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—
+    GetReg(fp, "SYSTEM\\CurrentControlSet\\Services\\SPAIMAP4S-PRO"); // æ—§ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã®è¨­å®šãƒ‡ãƒ¼ã‚¿ã‚’ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—
     fclose(fp);
   }
 #endif
   //////////////////////////////////////////////////////
 #ifdef REGTOFILE
-   ///// ƒXƒv[ƒ‹æ‚ÍƒŒƒWƒXƒgƒŠ‚©‚çæ“¾
+   ///// ã‚¹ãƒ—ãƒ¼ãƒ«å…ˆã¯ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã‹ã‚‰å–å¾—
    sprintf(mSpool, "%c:\\mail", (char)(_getdrive() + 'A' - 1 ));
-   GetProfileStringEx(SOFT_REG, "MailSpoolDir", "", mMailSpoolDir, sizeof(mMailSpoolDir)); // ƒ[ƒ‹ƒ{ƒbƒNƒXƒtƒHƒ‹ƒ_
+   GetProfileStringEx(SOFT_REG, "MailSpoolDir", "", mMailSpoolDir, sizeof(mMailSpoolDir)); // ãƒ¡ãƒ¼ãƒ«ãƒœãƒƒã‚¯ã‚¹ãƒ•ã‚©ãƒ«ãƒ€
    if (!mMailSpoolDir[0])
 	 strcpy(mMailSpoolDir, mSpool);
    Wiz8.m_MailSpoolDir = (CString)mMailSpoolDir;
    Wiz8.m_Computername = (CString)"";
-   ///// »•iƒR[ƒhæ“¾
+   ///// è£½å“ã‚³ãƒ¼ãƒ‰å–å¾—
    nProductcode = GetProfileIntEx(SOFT_REG, "Productcode", (int)0); // 0:Mail Server, 1:SMTP Server
-   ///// ƒNƒ‰ƒXƒ^‘Î‰ƒ‚[ƒh‚ÍƒŒƒWƒXƒgƒŠ‚©‚çæ“¾
+   ///// ã‚¯ãƒ©ã‚¹ã‚¿å¯¾å¿œãƒ¢ãƒ¼ãƒ‰ã¯ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã‹ã‚‰å–å¾—
    nClustering = GetProfileIntEx(SOFT_REG, "Clustering", (int)0);
 #endif
   //////////////////////////////////////////////////////
   if (cPropSheet.DoModal() == ID_WIZFINISH) {
      //// Create Regstry Key ////
- 	 ///// ƒXƒv[ƒ‹æ‚ÍƒŒƒWƒXƒgƒŠ‚Ö
+ 	 ///// ã‚¹ãƒ—ãƒ¼ãƒ«å…ˆã¯ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã¸
 #ifdef REGTOFILE
 	 sprintf(mSpool, (char *)((const char*)Wiz8.m_MailSpoolDir));
      ///////////////////////
-	 // ƒtƒHƒ‹ƒ_‚ğSakusei
+	 // ãƒ•ã‚©ãƒ«ãƒ€ã‚’Sakusei
 	 DWORD     a;
 	 CHAR      mTemp[256], *tmp;
 	 bUNC = FALSE;
-#ifdef UPDATE_20060827 // ƒ[ƒ‹ƒXƒv[ƒ‹ƒtƒHƒ‹ƒ_ƒhƒ‰ƒCƒu‚ªƒ[ƒ‹ƒ{ƒbƒNƒXƒtƒHƒ‹ƒ_EƒAƒJƒEƒ“ƒg‚c‚aƒtƒHƒ‹ƒ_‚Ìƒhƒ‰ƒCƒu‚É”½‰f‚³‚ê‚È‚¢
+#ifdef UPDATE_20060827 // ãƒ¡ãƒ¼ãƒ«ã‚¹ãƒ—ãƒ¼ãƒ«ãƒ•ã‚©ãƒ«ãƒ€ãƒ‰ãƒ©ã‚¤ãƒ–ãŒãƒ¡ãƒ¼ãƒ«ãƒœãƒƒã‚¯ã‚¹ãƒ•ã‚©ãƒ«ãƒ€ãƒ»ã‚¢ã‚«ã‚¦ãƒ³ãƒˆï¼¤ï¼¢ãƒ•ã‚©ãƒ«ãƒ€ã®ãƒ‰ãƒ©ã‚¤ãƒ–ã«åæ˜ ã•ã‚Œãªã„
 	 char      cDrv;
 	 if (mSpool[1] == ':')
        cDrv = mSpool[0];
@@ -227,15 +227,15 @@ void CEasyWizApp::StartSheet()
 	 if (tmp)
 	   tmp = strstr(tmp+2,"\\");
      else if ((tmp = strstr(mTemp,"\\\\"))) {
-	   bUNC = TRUE;  // UNCÚ‘±
+	   bUNC = TRUE;  // UNCæ¥ç¶š
        if ((tmp = strstr(tmp+2,"\\")))
          tmp = strstr(tmp+1,"\\");
 	 }
      while(tmp) {
        *tmp = '\x0';
-       if (_mkdir(mTemp) == -1) {         // ˆ——pƒtƒHƒ‹ƒ_ì¬
+       if (_mkdir(mTemp) == -1) {         // å‡¦ç†ç”¨ãƒ•ã‚©ãƒ«ãƒ€ä½œæˆ
 		 a = errno;
-		 if (a != 17 && a != 13) { // Šù‚É‘¶İ‚·‚éˆÈŠO
+		 if (a != 17 && a != 13) { // æ—¢ã«å­˜åœ¨ã™ã‚‹ä»¥å¤–
            CString m;
 		   CHAR    mMess[256];
            m.LoadString(IDS_STRING115);
@@ -247,21 +247,21 @@ void CEasyWizApp::StartSheet()
        *tmp = '\\';
        tmp = strstr(tmp+1,"\\");
 	 }
-     _mkdir(mTemp);         // ˆ——pƒtƒHƒ‹ƒ_ì¬
+     _mkdir(mTemp);         // å‡¦ç†ç”¨ãƒ•ã‚©ãƒ«ãƒ€ä½œæˆ
      ////////////////////////////////////////
    	 DWORD n1 = nClustering;
 	 nClustering = 0;
-	 WriteProfileStringEx(SOFT_REG,"MailSpoolDir", mSpool); // ƒŒƒWƒXƒgƒŠ‚Éƒ[ƒ‹ƒ{ƒbƒNƒXƒtƒHƒ‹ƒ_
+	 WriteProfileStringEx(SOFT_REG,"MailSpoolDir", mSpool); // ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã«ãƒ¡ãƒ¼ãƒ«ãƒœãƒƒã‚¯ã‚¹ãƒ•ã‚©ãƒ«ãƒ€
 	 nClustering = n1;
-	 WriteProfileStringEx(SOFT_REG,"MailSpoolDir", mSpool); // ‹¤—LƒtƒHƒ‹ƒ_ã‚ÌƒŒƒWƒXƒgƒŠî•ñ‚É‚àƒ[ƒ‹ƒ{ƒbƒNƒXƒtƒHƒ‹ƒ_
+	 WriteProfileStringEx(SOFT_REG,"MailSpoolDir", mSpool); // å…±æœ‰ãƒ•ã‚©ãƒ«ãƒ€ä¸Šã®ãƒ¬ã‚¸ã‚¹ãƒˆãƒªæƒ…å ±ã«ã‚‚ãƒ¡ãƒ¼ãƒ«ãƒœãƒƒã‚¯ã‚¹ãƒ•ã‚©ãƒ«ãƒ€
 #else
 	 sprintf(mSpool, "%c:\\mail", (char)(_getdrive() + 'A' - 1 ));
-	 WriteProfileStringEx(SOFT_REG,"MailSpoolDir", mSpool); // ƒ[ƒ‹ƒ{ƒbƒNƒXƒtƒHƒ‹ƒ_
+	 WriteProfileStringEx(SOFT_REG,"MailSpoolDir", mSpool); // ãƒ¡ãƒ¼ãƒ«ãƒœãƒƒã‚¯ã‚¹ãƒ•ã‚©ãƒ«ãƒ€
 #endif
 #ifdef REGTOFILE
-	 ///// ƒXƒv[ƒ‹æ
+	 ///// ã‚¹ãƒ—ãƒ¼ãƒ«å…ˆ
 	 strcpy(mMailSpoolDir, mSpool);
-	 //// ‹¤—LƒRƒ“ƒsƒ…[ƒ^ƒŠƒXƒg
+	 //// å…±æœ‰ã‚³ãƒ³ãƒ”ãƒ¥ãƒ¼ã‚¿ãƒªã‚¹ãƒˆ
 	 FILE *fp;
 	 strcpy(mCmpName, (char *)((const char *)Wiz8.m_Computername));
 	 if (mCmpName[0] == '\\' && mCmpName[1] == '\\')
@@ -277,7 +277,7 @@ void CEasyWizApp::StartSheet()
 #endif
      HKEY   hKey;
 #ifdef REGTOFILE
-   if (nClustering && !strnicmp(SOFT_REG, "software\\emwac", 14)) {
+   if (nClustering && !_strnicmp(SOFT_REG, "software\\emwac", 14)) {
      FileCreateKey(mMailSpoolDir, SOFT_REG);
    } else {
 #endif
@@ -288,7 +288,7 @@ void CEasyWizApp::StartSheet()
 #endif
      sprintf(mReg, "%s\\Aliases", SOFT_REG);
 #ifdef REGTOFILE
-   if (nClustering && !strnicmp(mReg, "software\\emwac", 14)) {
+   if (nClustering && !_strnicmp(mReg, "software\\emwac", 14)) {
      FileCreateKey(mMailSpoolDir, mReg);
    } else {
 #endif
@@ -299,7 +299,7 @@ void CEasyWizApp::StartSheet()
 #endif
      sprintf(mReg, "%s\\Lists", SOFT_REG);
 #ifdef REGTOFILE
-   if (nClustering && !strnicmp(mReg, "software\\emwac", 14)) {
+   if (nClustering && !_strnicmp(mReg, "software\\emwac", 14)) {
      FileCreateKey(mMailSpoolDir, mReg);
    } else {
 #endif
@@ -307,7 +307,7 @@ void CEasyWizApp::StartSheet()
      RegCloseKey((HKEY)hKey);
 #ifdef REGTOFILE
    }
-   if (nClustering && !strnicmp(DOMAIN_REG, "software\\emwac", 14)) {
+   if (nClustering && !_strnicmp(DOMAIN_REG, "software\\emwac", 14)) {
      FileCreateKey(mMailSpoolDir, DOMAIN_REG);
      FileCreateKey(mMailSpoolDir, DOMAIN_ACCOUNT);
      FileCreateKey(mMailSpoolDir, DOMAIN_SMTPIP);
@@ -330,40 +330,40 @@ void CEasyWizApp::StartSheet()
 #endif
 	 //////////////////////////////////////////////////////////////
 	 CreateProfile(NULL, SYSTEM_SMTPDS_REG);
-	 WriteProfileIntEx(SYSTEM_SMTPDS_REG, "MaxThread", 30);   //ƒfƒtƒHƒ‹ƒg‚ÍƒVƒ“ƒOƒ‹ƒXƒŒƒbƒh
-	 WriteProfileIntEx(SYSTEM_SMTPDS_REG, "SendDataTimeout", 600);   // 60•b~10~1 = 10•ª
-	 WriteProfileIntEx(SYSTEM_SMTPDS_REG, "RecvDataTimeout", 600);   // 60•b~10~1 = 10•ª
+	 WriteProfileIntEx(SYSTEM_SMTPDS_REG, "MaxThread", 30);   //ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã¯ã‚·ãƒ³ã‚°ãƒ«ã‚¹ãƒ¬ãƒƒãƒ‰
+	 WriteProfileIntEx(SYSTEM_SMTPDS_REG, "SendDataTimeout", 600);   // 60ç§’Ã—10Ã—1 = 10åˆ†
+	 WriteProfileIntEx(SYSTEM_SMTPDS_REG, "RecvDataTimeout", 600);   // 60ç§’Ã—10Ã—1 = 10åˆ†
      //////////////////////////////////////////////////////////////
 #ifdef REGTOFILE
-     if (bUNC) // UNCÚ‘±‚Ìê‡
+     if (bUNC) // UNCæ¥ç¶šã®å ´åˆ
 	   sprintf(mMailbox, "%s\\mail\\inbox\\%%USERNAME%%", mSpool);
 	 else
-#ifdef UPDATE_20060827 // ƒ[ƒ‹ƒXƒv[ƒ‹ƒtƒHƒ‹ƒ_ƒhƒ‰ƒCƒu‚ªƒ[ƒ‹ƒ{ƒbƒNƒXƒtƒHƒ‹ƒ_EƒAƒJƒEƒ“ƒg‚c‚aƒtƒHƒ‹ƒ_‚Ìƒhƒ‰ƒCƒu‚É”½‰f‚³‚ê‚È‚¢
+#ifdef UPDATE_20060827 // ãƒ¡ãƒ¼ãƒ«ã‚¹ãƒ—ãƒ¼ãƒ«ãƒ•ã‚©ãƒ«ãƒ€ãƒ‰ãƒ©ã‚¤ãƒ–ãŒãƒ¡ãƒ¼ãƒ«ãƒœãƒƒã‚¯ã‚¹ãƒ•ã‚©ãƒ«ãƒ€ãƒ»ã‚¢ã‚«ã‚¦ãƒ³ãƒˆï¼¤ï¼¢ãƒ•ã‚©ãƒ«ãƒ€ã®ãƒ‰ãƒ©ã‚¤ãƒ–ã«åæ˜ ã•ã‚Œãªã„
 	   sprintf(mMailbox, "%c:\\mail\\inbox\\%%USERNAME%%", (char)cDrv);
 #else
 	   sprintf(mMailbox, "%c:\\mail\\inbox\\%%USERNAME%%", (char)(_getdrive() + 'A' - 1 ));
 #endif
 #else
-#ifdef UPDATE_20060827 // ƒ[ƒ‹ƒXƒv[ƒ‹ƒtƒHƒ‹ƒ_ƒhƒ‰ƒCƒu‚ªƒ[ƒ‹ƒ{ƒbƒNƒXƒtƒHƒ‹ƒ_EƒAƒJƒEƒ“ƒg‚c‚aƒtƒHƒ‹ƒ_‚Ìƒhƒ‰ƒCƒu‚É”½‰f‚³‚ê‚È‚¢
+#ifdef UPDATE_20060827 // ãƒ¡ãƒ¼ãƒ«ã‚¹ãƒ—ãƒ¼ãƒ«ãƒ•ã‚©ãƒ«ãƒ€ãƒ‰ãƒ©ã‚¤ãƒ–ãŒãƒ¡ãƒ¼ãƒ«ãƒœãƒƒã‚¯ã‚¹ãƒ•ã‚©ãƒ«ãƒ€ãƒ»ã‚¢ã‚«ã‚¦ãƒ³ãƒˆï¼¤ï¼¢ãƒ•ã‚©ãƒ«ãƒ€ã®ãƒ‰ãƒ©ã‚¤ãƒ–ã«åæ˜ ã•ã‚Œãªã„
 	 sprintf(mMailbox, "%c:\\mail\\inbox\\%%USERNAME%%", (char)cDrv);
 #else
 	 sprintf(mMailbox, "%c:\\mail\\inbox\\%%USERNAME%%", (char)(_getdrive() + 'A' - 1 ));
 #endif
 #endif
 	 //AfxMessageBox( mMailbox, MB_OK);
-     WriteProfileStringEx(SOFT_REG,"MailInBoxDir", mMailbox); // ƒ[ƒ‹ƒ{ƒbƒNƒXƒtƒHƒ‹ƒ_
-     //SMTP”FØ
+     WriteProfileStringEx(SOFT_REG,"MailInBoxDir", mMailbox); // ãƒ¡ãƒ¼ãƒ«ãƒœãƒƒã‚¯ã‚¹ãƒ•ã‚©ãƒ«ãƒ€
+     //SMTPèªè¨¼
 	 //WriteProfileIntEx(SYSTEM_SMTPRS_REG, "SMTPAUTHOnly", 2);
      //WriteProfileStringEx(SYSTEM_SMTPRS_REG, "SMTPAUTHMode", "PLAIN LOGIN CRAM-MD5"); //mSMTPAUTHMODE
-     //VRFY,EXPN‚Ö‚Ì‰“š‚Ì—L–³
+     //VRFY,EXPNã¸ã®å¿œç­”ã®æœ‰ç„¡
 	 WriteProfileIntEx(SOFT_REG, "Vrfy", FALSE);
      /////////////////////////////////	
 
      WriteProfileIntEx(SOFT_REG, "UserManager", (INT)(Wiz1.m_Sel == 0 ? 0 : 1));
-	 if (Wiz1.m_Sel == 0) { // SoftAccountŠÇ—
+	 if (Wiz1.m_Sel == 0) { // SoftAccountç®¡ç†
        char mLongPath[256],  mShortPath[256];
 #ifdef REGTOFILE
-	 if (bUNC) { // UNCÚ‘±‚Ìê‡
+	 if (bUNC) { // UNCæ¥ç¶šã®å ´åˆ
        sprintf(mLongPath, "%s\\db\\", mSpool);
 	   _mkdir(mLongPath);
 	 } else
@@ -371,32 +371,32 @@ void CEasyWizApp::StartSheet()
 #else
  	   sprintf(mLongPath, "%s\\", mPath);
 #endif
-       WriteProfileStringEx(SOFT_REG,"Membership", mLongPath); // ƒAƒJƒEƒ“ƒgƒtƒHƒ‹ƒ_‚Ìw’è
+       WriteProfileStringEx(SOFT_REG,"Membership", mLongPath); // ã‚¢ã‚«ã‚¦ãƒ³ãƒˆãƒ•ã‚©ãƒ«ãƒ€ã®æŒ‡å®š
        mShortPath[0] = '\x0';
        GetShortPathName( mLongPath, mShortPath, sizeof(mShortPath));
 	   if (mShortPath[0] && strcmp(mLongPath, mShortPath) != 0)
-         WriteProfileStringEx(SOFT_REG,"Membership", mShortPath); // ƒAƒJƒEƒ“ƒgƒtƒHƒ‹ƒ_‚Ìw’è(ƒVƒ‡[ƒgƒpƒX‚É•ÏŠ·)
-     } else if (Wiz1.m_Sel == 1) {  // WindowsŠÇ—
-       WriteProfileStringEx(SOFT_REG,"Membership", ""); // PDC‚ÌƒAƒJƒEƒ“ƒg‚ğ—LŒø‚É‚·‚éB
-       WriteProfileStringEx(SOFT_REG, "MailGroup", (char *)((const char *)Wiz11.m_LocalGroup));  // ƒ[ƒJƒ‹ƒOƒ‹[ƒvİ’è
-	   UserRight((char *)((const char *)Wiz11.m_LocalGroup), "", TRUE);                        // uƒoƒbƒ`ƒWƒ‡ƒu‚É‚æ‚éƒƒOƒIƒ“Œ —˜İ’èv
+         WriteProfileStringEx(SOFT_REG,"Membership", mShortPath); // ã‚¢ã‚«ã‚¦ãƒ³ãƒˆãƒ•ã‚©ãƒ«ãƒ€ã®æŒ‡å®š(ã‚·ãƒ§ãƒ¼ãƒˆãƒ‘ã‚¹ã«å¤‰æ›)
+     } else if (Wiz1.m_Sel == 1) {  // Windowsç®¡ç†
+       WriteProfileStringEx(SOFT_REG,"Membership", ""); // PDCã®ã‚¢ã‚«ã‚¦ãƒ³ãƒˆã‚’æœ‰åŠ¹ã«ã™ã‚‹ã€‚
+       WriteProfileStringEx(SOFT_REG, "MailGroup", (char *)((const char *)Wiz11.m_LocalGroup));  // ãƒ­ãƒ¼ã‚«ãƒ«ã‚°ãƒ«ãƒ¼ãƒ—è¨­å®š
+	   UserRight((char *)((const char *)Wiz11.m_LocalGroup), "", TRUE);                        // ã€Œãƒãƒƒãƒã‚¸ãƒ§ãƒ–ã«ã‚ˆã‚‹ãƒ­ã‚°ã‚ªãƒ³æ¨©åˆ©è¨­å®šã€
 	 } else if (Wiz1.m_Sel == 2) {
-       WriteProfileStringEx(SOFT_REG,"Membership", (char *)((const char *)Wiz12.m_PDC)); // PDC‚ÌƒAƒJƒEƒ“ƒg‚ğ—LŒø‚É‚·‚éB
-       WriteProfileStringEx(SOFT_REG, "MailGroup", (char *)((const char *)Wiz12.m_LocalGroup));  // ƒ[ƒJƒ‹ƒOƒ‹[ƒvİ’è
-#ifdef UPDATE_20070124 // "<ƒhƒƒCƒ“–¼>\Domain Users"‚ğƒ[ƒJƒ‹ƒ|ƒŠƒV[‚Ìuƒoƒbƒ`ƒWƒ‡ƒu‚ÌƒƒOƒIƒ“Œ ŒÀ‚É’è‹`v
-	   if (Wiz12.m_PDC[0]) { // PDC‚ÉƒhƒƒCƒ“–¼‚ª‚ ‚é‚È‚ç
+       WriteProfileStringEx(SOFT_REG,"Membership", (char *)((const char *)Wiz12.m_PDC)); // PDCã®ã‚¢ã‚«ã‚¦ãƒ³ãƒˆã‚’æœ‰åŠ¹ã«ã™ã‚‹ã€‚
+       WriteProfileStringEx(SOFT_REG, "MailGroup", (char *)((const char *)Wiz12.m_LocalGroup));  // ãƒ­ãƒ¼ã‚«ãƒ«ã‚°ãƒ«ãƒ¼ãƒ—è¨­å®š
+#ifdef UPDATE_20070124 // "<ãƒ‰ãƒ¡ã‚¤ãƒ³å>\Domain Users"ã‚’ãƒ­ãƒ¼ã‚«ãƒ«ãƒãƒªã‚·ãƒ¼ã®ã€Œãƒãƒƒãƒã‚¸ãƒ§ãƒ–ã®ãƒ­ã‚°ã‚ªãƒ³æ¨©é™ã«å®šç¾©ã€
+	   if (Wiz12.m_PDC[0]) { // PDCã«ãƒ‰ãƒ¡ã‚¤ãƒ³åãŒã‚ã‚‹ãªã‚‰
 		 CString mDomainGroup = Wiz12.m_PDC + (CString)"\\Domain Users";
-	     UserRight((char *)((const char *)mDomainGroup), NULL, TRUE);                        // uƒoƒbƒ`ƒWƒ‡ƒu‚É‚æ‚éƒƒOƒIƒ“Œ —˜İ’èv
+	     UserRight((char *)((const char *)mDomainGroup), NULL, TRUE);                        // ã€Œãƒãƒƒãƒã‚¸ãƒ§ãƒ–ã«ã‚ˆã‚‹ãƒ­ã‚°ã‚ªãƒ³æ¨©åˆ©è¨­å®šã€
 	   }
 #endif
 #ifdef UPDATE_20050128
        char mDGAccount[256];
-	   sprintf(mDGAccount, "%s\\%s", Wiz12.m_PDC, Wiz12.m_LocalGroup);
+	   sprintf(mDGAccount, "%s\\%s", (LPCSTR)Wiz12.m_PDC, (LPCSTR)Wiz12.m_LocalGroup);
 	  //AfxMessageBox( mDGAccount, MB_OK);
        AddLocalGroupAccount(NULL, NULL, mDGAccount, (char *)((const char *)Wiz12.m_LocalGroup));
-	   UserRight((char *)((const char *)Wiz12.m_LocalGroup), NULL, TRUE);                        // uƒoƒbƒ`ƒWƒ‡ƒu‚É‚æ‚éƒƒOƒIƒ“Œ —˜İ’èv
+	   UserRight((char *)((const char *)Wiz12.m_LocalGroup), NULL, TRUE);                        // ã€Œãƒãƒƒãƒã‚¸ãƒ§ãƒ–ã«ã‚ˆã‚‹ãƒ­ã‚°ã‚ªãƒ³æ¨©åˆ©è¨­å®šã€
 #endif
-	   UserRight((char *)((const char *)Wiz12.m_LocalGroup), (char *)((const char *)Wiz12.m_PDC), TRUE);                        // uƒoƒbƒ`ƒWƒ‡ƒu‚É‚æ‚éƒƒOƒIƒ“Œ —˜İ’èv
+	   UserRight((char *)((const char *)Wiz12.m_LocalGroup), (char *)((const char *)Wiz12.m_PDC), TRUE);                        // ã€Œãƒãƒƒãƒã‚¸ãƒ§ãƒ–ã«ã‚ˆã‚‹ãƒ­ã‚°ã‚ªãƒ³æ¨©åˆ©è¨­å®šã€
 	 }
 	 CString mDNS = (CString) "";
 	 if (Wiz2.m_DNS1 != (CString)"")
@@ -425,17 +425,17 @@ void CEasyWizApp::StartSheet()
    	     sprintf(pL[2], "%s 143",  (char *)((const char *)Wiz3.m_IP1));
 	     pL[2] += strlen(pL[2])+1;
 	   }
-       WriteProfileStringEx(DOMAIN_SMTPIP, (char *)((const char *)Wiz3.m_Name1), (char *)((const char *)Wiz3.m_IP1));    // ‘ÎÛƒhƒƒCƒ“‚ÌSMTP‰“š‚h‚oƒAƒhƒŒƒXİ’è
-       WriteProfileStringEx(DOMAIN_POP3IP, (char *)((const char *)Wiz3.m_Name1), (char *)((const char *)Wiz3.m_IP1));    // ‘ÎÛƒhƒƒCƒ“‚ÌPOP3‰“š‚h‚oƒAƒhƒŒƒXİ’è
-       WriteProfileStringEx(DOMAIN_IMAP4IP, (char *)((const char *)Wiz3.m_Name1), (char *)((const char *)Wiz3.m_IP1));    // ‘ÎÛƒhƒƒCƒ“‚ÌIMAP4‰“š‚h‚oƒAƒhƒŒƒXİ’è
-       WriteProfileStringEx(DOMAIN_FOLDER, (char *)((const char *)Wiz3.m_Name1), (Wiz3.m_IP1 == "" ? "" : (char *)((const char *)Wiz3.m_Name1)));  // ‘ÎÛƒhƒƒCƒ“ˆ¶‚Ìƒ[ƒ‹‚Ì•Û‘¶æŠg’£–¼
+       WriteProfileStringEx(DOMAIN_SMTPIP, (char *)((const char *)Wiz3.m_Name1), (char *)((const char *)Wiz3.m_IP1));    // å¯¾è±¡ãƒ‰ãƒ¡ã‚¤ãƒ³ã®SMTPå¿œç­”ï¼©ï¼°ã‚¢ãƒ‰ãƒ¬ã‚¹è¨­å®š
+       WriteProfileStringEx(DOMAIN_POP3IP, (char *)((const char *)Wiz3.m_Name1), (char *)((const char *)Wiz3.m_IP1));    // å¯¾è±¡ãƒ‰ãƒ¡ã‚¤ãƒ³ã®POP3å¿œç­”ï¼©ï¼°ã‚¢ãƒ‰ãƒ¬ã‚¹è¨­å®š
+       WriteProfileStringEx(DOMAIN_IMAP4IP, (char *)((const char *)Wiz3.m_Name1), (char *)((const char *)Wiz3.m_IP1));    // å¯¾è±¡ãƒ‰ãƒ¡ã‚¤ãƒ³ã®IMAP4å¿œç­”ï¼©ï¼°ã‚¢ãƒ‰ãƒ¬ã‚¹è¨­å®š
+       WriteProfileStringEx(DOMAIN_FOLDER, (char *)((const char *)Wiz3.m_Name1), (Wiz3.m_IP1 == "" ? "" : (char *)((const char *)Wiz3.m_Name1)));  // å¯¾è±¡ãƒ‰ãƒ¡ã‚¤ãƒ³å®›ã®ãƒ¡ãƒ¼ãƒ«ã®ä¿å­˜å…ˆæ‹¡å¼µå
 	 }
 	 if (Wiz3.m_Name2 != (CString)"") {
 	   n = strlen(Wiz3.m_Name2);
 	   strcpy(&mDomain[nLen+1], Wiz3.m_Name2);
 	   nLen = nLen + 1 + n;
-#ifdef UPDATE_20051130 // ƒ}ƒ‹ƒ`ƒhƒƒCƒ“İ’è‚Å“¯‚¶‚h‚oƒAƒhƒŒƒX‚Ìê‡d•¡‚µ‚Ä‚h‚o‚ª“o˜^‚³‚ê‚Ä‚µ‚Ü‚¤•s‹ï‡B
-	   if (Wiz3.m_IP1 != Wiz3.m_IP2 &&  // IPƒAƒhƒŒƒX‚Ìd•¡İ’è‹Ö~
+#ifdef UPDATE_20051130 // ãƒãƒ«ãƒãƒ‰ãƒ¡ã‚¤ãƒ³è¨­å®šã§åŒã˜ï¼©ï¼°ã‚¢ãƒ‰ãƒ¬ã‚¹ã®å ´åˆé‡è¤‡ã—ã¦ï¼©ï¼°ãŒç™»éŒ²ã•ã‚Œã¦ã—ã¾ã†ä¸å…·åˆã€‚
+	   if (Wiz3.m_IP1 != Wiz3.m_IP2 &&  // IPã‚¢ãƒ‰ãƒ¬ã‚¹ã®é‡è¤‡è¨­å®šç¦æ­¢
 		   Wiz3.m_IP2 != (CString)"") {
 #else
 	   if (Wiz3.m_IP2 != (CString)"") {
@@ -447,18 +447,18 @@ void CEasyWizApp::StartSheet()
    	     sprintf(pL[2], "%s 143",  (char *)((const char *)Wiz3.m_IP2));
 	     pL[2] += strlen(pL[2])+1;
 	   }
-       WriteProfileStringEx(DOMAIN_SMTPIP, (char *)((const char *)Wiz3.m_Name2), (char *)((const char *)Wiz3.m_IP2));    // ‘ÎÛƒhƒƒCƒ“‚ÌSMTP‰“š‚h‚oƒAƒhƒŒƒXİ’è
-       WriteProfileStringEx(DOMAIN_POP3IP, (char *)((const char *)Wiz3.m_Name2), (char *)((const char *)Wiz3.m_IP2));    // ‘ÎÛƒhƒƒCƒ“‚ÌPOP3‰“š‚h‚oƒAƒhƒŒƒXİ’è
-       WriteProfileStringEx(DOMAIN_IMAP4IP, (char *)((const char *)Wiz3.m_Name2), (char *)((const char *)Wiz3.m_IP2));    // ‘ÎÛƒhƒƒCƒ“‚ÌIMAP4‰“š‚h‚oƒAƒhƒŒƒXİ’è
-       WriteProfileStringEx(DOMAIN_FOLDER, (char *)((const char *)Wiz3.m_Name2), (char *)((const char *)Wiz3.m_Name2));  // ‘ÎÛƒhƒƒCƒ“ˆ¶‚Ìƒ[ƒ‹‚Ì•Û‘¶æŠg’£–¼
+       WriteProfileStringEx(DOMAIN_SMTPIP, (char *)((const char *)Wiz3.m_Name2), (char *)((const char *)Wiz3.m_IP2));    // å¯¾è±¡ãƒ‰ãƒ¡ã‚¤ãƒ³ã®SMTPå¿œç­”ï¼©ï¼°ã‚¢ãƒ‰ãƒ¬ã‚¹è¨­å®š
+       WriteProfileStringEx(DOMAIN_POP3IP, (char *)((const char *)Wiz3.m_Name2), (char *)((const char *)Wiz3.m_IP2));    // å¯¾è±¡ãƒ‰ãƒ¡ã‚¤ãƒ³ã®POP3å¿œç­”ï¼©ï¼°ã‚¢ãƒ‰ãƒ¬ã‚¹è¨­å®š
+       WriteProfileStringEx(DOMAIN_IMAP4IP, (char *)((const char *)Wiz3.m_Name2), (char *)((const char *)Wiz3.m_IP2));    // å¯¾è±¡ãƒ‰ãƒ¡ã‚¤ãƒ³ã®IMAP4å¿œç­”ï¼©ï¼°ã‚¢ãƒ‰ãƒ¬ã‚¹è¨­å®š
+       WriteProfileStringEx(DOMAIN_FOLDER, (char *)((const char *)Wiz3.m_Name2), (char *)((const char *)Wiz3.m_Name2));  // å¯¾è±¡ãƒ‰ãƒ¡ã‚¤ãƒ³å®›ã®ãƒ¡ãƒ¼ãƒ«ã®ä¿å­˜å…ˆæ‹¡å¼µå
 	 }
 	 if (Wiz3.m_Name3 != (CString)"") {
 	   n = strlen(Wiz3.m_Name3);
 	   strcpy(&mDomain[nLen+1], Wiz3.m_Name3);
 	   nLen = nLen + 1 + n;
-#ifdef UPDATE_20051130 // ƒ}ƒ‹ƒ`ƒhƒƒCƒ“İ’è‚Å“¯‚¶‚h‚oƒAƒhƒŒƒX‚Ìê‡d•¡‚µ‚Ä‚h‚o‚ª“o˜^‚³‚ê‚Ä‚µ‚Ü‚¤•s‹ï‡B
-	   if (Wiz3.m_IP3 != Wiz3.m_IP1 &&  // IPƒAƒhƒŒƒX‚Ìd•¡İ’è‹Ö~
-		   Wiz3.m_IP3 != Wiz3.m_IP2 &&  // IPƒAƒhƒŒƒX‚Ìd•¡İ’è‹Ö~
+#ifdef UPDATE_20051130 // ãƒãƒ«ãƒãƒ‰ãƒ¡ã‚¤ãƒ³è¨­å®šã§åŒã˜ï¼©ï¼°ã‚¢ãƒ‰ãƒ¬ã‚¹ã®å ´åˆé‡è¤‡ã—ã¦ï¼©ï¼°ãŒç™»éŒ²ã•ã‚Œã¦ã—ã¾ã†ä¸å…·åˆã€‚
+	   if (Wiz3.m_IP3 != Wiz3.m_IP1 &&  // IPã‚¢ãƒ‰ãƒ¬ã‚¹ã®é‡è¤‡è¨­å®šç¦æ­¢
+		   Wiz3.m_IP3 != Wiz3.m_IP2 &&  // IPã‚¢ãƒ‰ãƒ¬ã‚¹ã®é‡è¤‡è¨­å®šç¦æ­¢
 	       Wiz3.m_IP3 != (CString)"") {
 #else
 	   if (Wiz3.m_IP3 != (CString)"") {
@@ -470,10 +470,10 @@ void CEasyWizApp::StartSheet()
    	     sprintf(pL[2], "%s 143",  (char *)((const char *)Wiz3.m_IP3));
 	     pL[2] += strlen(pL[2])+1;
 	   }
-       WriteProfileStringEx(DOMAIN_SMTPIP, (char *)((const char *)Wiz3.m_Name3), (char *)((const char *)Wiz3.m_IP3));    // ‘ÎÛƒhƒƒCƒ“‚ÌSMTP‰“š‚h‚oƒAƒhƒŒƒXİ’è
-       WriteProfileStringEx(DOMAIN_POP3IP, (char *)((const char *)Wiz3.m_Name3), (char *)((const char *)Wiz3.m_IP3));    // ‘ÎÛƒhƒƒCƒ“‚ÌPOP3‰“š‚h‚oƒAƒhƒŒƒXİ’è
-       WriteProfileStringEx(DOMAIN_IMAP4IP, (char *)((const char *)Wiz3.m_Name3), (char *)((const char *)Wiz3.m_IP3));    // ‘ÎÛƒhƒƒCƒ“‚ÌIMAP4‰“š‚h‚oƒAƒhƒŒƒXİ’è
-       WriteProfileStringEx(DOMAIN_FOLDER, (char *)((const char *)Wiz3.m_Name3), (char *)((const char *)Wiz3.m_Name3));  // ‘ÎÛƒhƒƒCƒ“ˆ¶‚Ìƒ[ƒ‹‚Ì•Û‘¶æŠg’£–¼
+       WriteProfileStringEx(DOMAIN_SMTPIP, (char *)((const char *)Wiz3.m_Name3), (char *)((const char *)Wiz3.m_IP3));    // å¯¾è±¡ãƒ‰ãƒ¡ã‚¤ãƒ³ã®SMTPå¿œç­”ï¼©ï¼°ã‚¢ãƒ‰ãƒ¬ã‚¹è¨­å®š
+       WriteProfileStringEx(DOMAIN_POP3IP, (char *)((const char *)Wiz3.m_Name3), (char *)((const char *)Wiz3.m_IP3));    // å¯¾è±¡ãƒ‰ãƒ¡ã‚¤ãƒ³ã®POP3å¿œç­”ï¼©ï¼°ã‚¢ãƒ‰ãƒ¬ã‚¹è¨­å®š
+       WriteProfileStringEx(DOMAIN_IMAP4IP, (char *)((const char *)Wiz3.m_Name3), (char *)((const char *)Wiz3.m_IP3));    // å¯¾è±¡ãƒ‰ãƒ¡ã‚¤ãƒ³ã®IMAP4å¿œç­”ï¼©ï¼°ã‚¢ãƒ‰ãƒ¬ã‚¹è¨­å®š
+       WriteProfileStringEx(DOMAIN_FOLDER, (char *)((const char *)Wiz3.m_Name3), (char *)((const char *)Wiz3.m_Name3));  // å¯¾è±¡ãƒ‰ãƒ¡ã‚¤ãƒ³å®›ã®ãƒ¡ãƒ¼ãƒ«ã®ä¿å­˜å…ˆæ‹¡å¼µå
 	 }
      WriteProfileIntEx(SYSTEM_SMTPRS_REG, "ListenMode",  FALSE);
 	 if (mListenIP[0][0]) {
@@ -483,7 +483,7 @@ void CEasyWizApp::StartSheet()
 	   WriteProfileIntEx(SYSTEM_SMTPRS_REG, "ListenMode",  TRUE);
        WriteProfileStringExType(SYSTEM_SMTPRS_REG, "ListenIP", mListenIP[0], nL, REG_MULTI_SZ);
 	 }
-     if (nProductcode == 0) { // »•i‚ªMail Server‚È‚ç‚Îİ’è‚·‚é
+     if (nProductcode == 0) { // è£½å“ãŒMail Serverãªã‚‰ã°è¨­å®šã™ã‚‹
        WriteProfileIntEx(SYSTEM_POP3_REG, "ListenMode",  FALSE);
 	   if (mListenIP[1][0]) {
          nL = (DWORD)pL[1] - (DWORD)&mListenIP[1]-1;
@@ -502,28 +502,28 @@ void CEasyWizApp::StartSheet()
 	   }
 	 }
      WriteProfileBinaryEx(SOFT_REG, "DomainNamesAreLocal", (char *)((const char *)mDomain), nLen);
-	 WriteProfileStringEx(SOFT_REG,"PostMaster", (char *)((const char *) Wiz4.m_Postmaster)); // ŠÇ—ÒƒAƒhƒŒƒX
+	 WriteProfileStringEx(SOFT_REG,"PostMaster", (char *)((const char *) Wiz4.m_Postmaster)); // ç®¡ç†è€…ã‚¢ãƒ‰ãƒ¬ã‚¹
 #ifdef QSEND
      WriteProfileStringEx(SYSTEM_SMTPDS_REG,"SendGateway", ((const char *) Wiz7.m_GATEIP));
-	 WriteProfileIntEx(SYSTEM_SMTPDS_PARAM_REG, "PortNo", Wiz7.m_GATEPort);  //smtpds ƒ|[ƒg”Ô†
-	 WriteProfileIntEx(SYSTEM_SMTPDS_REG, "MailForward", Wiz7.m_Gateway);  // ‘SóM‚ğSMTP GateWay‚Ö“]‘—B
-	 WriteProfileIntEx(SYSTEM_SMTPRS_REG, "MailBackup", Wiz7.m_Gateway); // TRUE:ƒoƒbƒNƒAƒbƒv‚·‚é FALSE:ƒoƒbƒNƒAƒbƒv‚µ‚È‚¢B
+	 WriteProfileIntEx(SYSTEM_SMTPDS_PARAM_REG, "PortNo", Wiz7.m_GATEPort);  //smtpds ãƒãƒ¼ãƒˆç•ªå·
+	 WriteProfileIntEx(SYSTEM_SMTPDS_REG, "MailForward", Wiz7.m_Gateway);  // å…¨å—ä¿¡ã‚’SMTP GateWayã¸è»¢é€ã€‚
+	 WriteProfileIntEx(SYSTEM_SMTPRS_REG, "MailBackup", Wiz7.m_Gateway); // TRUE:ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ã™ã‚‹ FALSE:ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ã—ãªã„ã€‚
      sprintf(mFn, "%s\\qsend.ini", mPath);
 	 if ((fp = fopen(mFn, "wt"))) {
-	   fprintf(fp, "/q%s\n", Wiz7.m_ARCFolder); ///qi:\mail\backup
-	   fprintf(fp, "/s%s\n", Wiz7.m_ARCIP);     ///s192.168.1.15
+	   fprintf(fp, "/q%s\n", (LPCSTR)Wiz7.m_ARCFolder); ///qi:\mail\backup
+	   fprintf(fp, "/s%s\n", (LPCSTR)Wiz7.m_ARCIP);     ///s192.168.1.15
 	   fprintf(fp, "/n%d\n", Wiz7.m_ARCPort);   ///N25
 	   fclose(fp);
 	 }
 #endif
 #ifdef REGTOFILE
-  } else { // ƒEƒBƒU[ƒhƒLƒƒƒ“ƒZƒ‹
-     if (nClustering && !strnicmp(PRODUCTS_ROOT, "software\\emwac", 14)) {
+  } else { // ã‚¦ã‚£ã‚¶ãƒ¼ãƒ‰ã‚­ãƒ£ãƒ³ã‚»ãƒ«
+     if (nClustering && !_strnicmp(PRODUCTS_ROOT, "software\\emwac", 14)) {
        FileCreateKey(mMailSpoolDir, PRODUCTS_ROOT);
 	 } else {
        CreateProfile(NULL, PRODUCTS_ROOT);
 	 }
-	  /// ‹Œİ’è‚©‚ç‚ÌˆÈ~
+	  /// æ—§è¨­å®šã‹ã‚‰ã®ä»¥é™
       HKEY hKeyRoot = HKEY_LOCAL_MACHINE;
       HKEY hKey;
 	  DWORD  retCode;
@@ -533,13 +533,13 @@ void CEasyWizApp::StartSheet()
                    0,
                    KEY_READ,
                    &hKey);
-	  if (retCode != ERROR_SUCCESS) { // –¢İ’è‚È‚ç‹Œƒf[ƒ^‚ÌˆÚs‚ğs‚¤
+	  if (retCode != ERROR_SUCCESS) { // æœªè¨­å®šãªã‚‰æ—§ãƒ‡ãƒ¼ã‚¿ã®ç§»è¡Œã‚’è¡Œã†
 		RestoreFile(mFn);
         ///////////////////////////////////
 	    CHAR *p1, mOLDPath[256], mOLDFiles[256], mNEWPath[256];
 	    CHAR mSrc[256], mDest[256];
 	    sprintf(mNEWPath, "%s\\", mPath);
-        GetProfileStringEx("SYSTEM\\CurrentControlSet\\Services\\SPARS-PRO", "ImagePath", "", mOLDPath, sizeof(mOLDPath)); // ‹ŒƒCƒ“ƒXƒg[ƒ‹ƒpƒX
+        GetProfileStringEx("SYSTEM\\CurrentControlSet\\Services\\SPARS-PRO", "ImagePath", "", mOLDPath, sizeof(mOLDPath)); // æ—§ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ãƒ‘ã‚¹
         if ((p1 = strrchr(mOLDPath, '\\')))
           *(p1+1) = '\x0';
         ///////////////////////////////////

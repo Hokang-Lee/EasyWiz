@@ -1,4 +1,4 @@
-// Wiz4.cpp : ƒCƒ“ƒvƒŠƒƒ“ƒe[ƒVƒ‡ƒ“ ƒtƒ@ƒCƒ‹
+ï»¿// Wiz4.cpp : ã‚¤ãƒ³ãƒ—ãƒªãƒ¡ãƒ³ãƒ†ãƒ¼ã‚·ãƒ§ãƒ³ ãƒ•ã‚¡ã‚¤ãƒ«
 //
 
 #include "stdafx.h"
@@ -15,7 +15,7 @@ static char THIS_FILE[] = __FILE__;
 extern CString mWiz4List;
 
 /////////////////////////////////////////////////////////////////////////////
-// CWiz4 ƒvƒƒpƒeƒB ƒy[ƒW
+// CWiz4 ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ ãƒšãƒ¼ã‚¸
 
 IMPLEMENT_DYNCREATE(CWiz4, CPropertyPage)
 
@@ -46,22 +46,32 @@ BEGIN_MESSAGE_MAP(CWiz4, CPropertyPage)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
-// CWiz4 ƒƒbƒZ[ƒW ƒnƒ“ƒhƒ‰
+// CWiz4 ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒãƒ³ãƒ‰ãƒ©
 
 LRESULT CWiz4::OnWizardNext() 
 {
-	// TODO: ‚±‚ÌˆÊ’u‚ÉŒÅ—L‚Ìˆ—‚ğ’Ç‰Á‚·‚é‚©A‚Ü‚½‚ÍŠî–{ƒNƒ‰ƒX‚ğŒÄ‚Ño‚µ‚Ä‚­‚¾‚³‚¢
+	// TODO: ã“ã®ä½ç½®ã«å›ºæœ‰ã®å‡¦ç†ã‚’è¿½åŠ ã™ã‚‹ã‹ã€ã¾ãŸã¯åŸºæœ¬ã‚¯ãƒ©ã‚¹ã‚’å‘¼ã³å‡ºã—ã¦ãã ã•ã„
     UpdateData(TRUE);
+	m_Postmaster.TrimLeft();
+	m_Postmaster.TrimRight();
+	int at = m_Postmaster.Find('@');
+	if (at <= 0 || at != m_Postmaster.ReverseFind('@') ||
+		at >= m_Postmaster.GetLength() - 3 ||
+		m_Postmaster.Find('.', at + 2) < 0 || m_Postmaster.Find(' ') >= 0) {
+		AfxMessageBox("ç®¡ç†è€…ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’æ­£ã—ãå…¥åŠ›ã—ã¦ãã ã•ã„ã€‚\nä¾‹: postmaster@example.jp", MB_OK | MB_ICONEXCLAMATION);
+		GetDlgItem(IDC_EDIT_NAME1)->SetFocus();
+		return -1;
+	}
     CString m, ms;
     m.LoadString( IDS_STRING111 );
 	CHAR mData[1024];
     sprintf(mData, m, (char *)((const char *)m_Postmaster));
     mWiz4List = (CString)mData;
 	/*
-    if (GetUserDefaultLangID() != (LANGID)0x0411) // “ú–{ŒêˆÈŠO
+    if (GetUserDefaultLangID() != (LANGID)0x0411) // æ—¥æœ¬èªä»¥å¤–
 	  mWiz4List = (CString) "Postmaster\n " + m_Postmaster + (CString)"\n\n";
 	else
-	  mWiz4List = (CString) "ŠÇ—Ò‚Æ‚·‚éƒ[ƒ‹ƒAƒhƒŒƒX\n@" + m_Postmaster + (CString)"\n\n";
+	  mWiz4List = (CString) "ç®¡ç†è€…ã¨ã™ã‚‹ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹\nã€€" + m_Postmaster + (CString)"\n\n";
 	*/
     UpdateData(FALSE);
 
@@ -72,7 +82,7 @@ void CWiz4::OnShowWindow(BOOL bShow, UINT nStatus)
 {
 	CPropertyPage::OnShowWindow(bShow, nStatus);
 	
-	// TODO: ‚±‚ÌˆÊ’u‚ÉƒƒbƒZ[ƒW ƒnƒ“ƒhƒ‰—p‚ÌƒR[ƒh‚ğ’Ç‰Á‚µ‚Ä‚­‚¾‚³‚¢
+	// TODO: ã“ã®ä½ç½®ã«ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒãƒ³ãƒ‰ãƒ©ç”¨ã®ã‚³ãƒ¼ãƒ‰ã‚’è¿½åŠ ã—ã¦ãã ã•ã„
 	if (bShow) {
       UpdateData(TRUE);
 	  CPropertySheet* pSheet = (CPropertySheet*)GetParent();
@@ -81,7 +91,7 @@ void CWiz4::OnShowWindow(BOOL bShow, UINT nStatus)
 	  CHAR mTitle[128];
       sprintf(mTitle, m, "4");
 	  pSheet->SetTitle(mTitle, 0);
-	  //pSheet->SetTitle("SPA-PRO Mail Server ŠÈ’PƒZƒbƒgƒAƒbƒvƒEƒBƒU[ƒh(ƒXƒeƒbƒv@‚V)", 0);
+	  //pSheet->SetTitle("SPA-PRO Mail Server ç°¡å˜ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—ã‚¦ã‚£ã‚¶ãƒ¼ãƒ‰(ã‚¹ãƒ†ãƒƒãƒ—ã€€ï¼—)", 0);
       UpdateData(FALSE);
 	}
 	

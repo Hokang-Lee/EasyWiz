@@ -1,4 +1,4 @@
-// Wiz12.cpp : �C���v�������e�[�V���� �t�@�C��
+﻿// Wiz12.cpp : インプリメンテーション ファイル
 //
 
 #include "stdafx.h"
@@ -20,7 +20,7 @@ static char THIS_FILE[] = __FILE__;
 extern CString mWiz12List;
 
 /////////////////////////////////////////////////////////////////////////////
-// CWiz12 �v���p�e�B �y�[�W
+// CWiz12 プロパティ ページ
 
 IMPLEMENT_DYNCREATE(CWiz12, CPropertyPage)
 
@@ -55,11 +55,11 @@ BEGIN_MESSAGE_MAP(CWiz12, CPropertyPage)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
-// CWiz12 ���b�Z�[�W �n���h��
+// CWiz12 メッセージ ハンドラ
 
 LRESULT CWiz12::OnWizardNext() 
 {
-	// TODO: ���̈ʒu�ɌŗL�̏�����ǉ����邩�A�܂��͊�{�N���X���Ăяo���Ă�������
+	// TODO: この位置に固有の処理を追加するか、または基本クラスを呼び出してください
     UpdateData(TRUE);
     CString m, ms;
     m.LoadString( IDS_STRING106 );
@@ -67,12 +67,12 @@ LRESULT CWiz12::OnWizardNext()
     sprintf(mData, m, (char *)((const char *)m_PDC), (char *)((const char *)m_LocalGroup) );
     mWiz12List = (CString)mData;
     /*
-    if (GetUserDefaultLangID() != (LANGID)0x0411) { // ���{��ȊO
+    if (GetUserDefaultLangID() != (LANGID)0x0411) { // 日本語以外
       mWiz12List = (CString) " Activi directory(AD) " + m_PDC + (CString)"\n";
       mWiz12List += (CString) " Mail Group " + m_LocalGroup + (CString)"\n\n";
 	} else {
-      mWiz12List = (CString) "�@�A�N�e�B�u�f�B���N�g���@" + m_PDC + (CString)"\n";
-      mWiz12List += (CString) "�@���[���O���[�v�@" + m_LocalGroup + (CString)"\n\n";
+      mWiz12List = (CString) "　アクティブディレクトリ　" + m_PDC + (CString)"\n";
+      mWiz12List += (CString) "　メールグループ　" + m_LocalGroup + (CString)"\n\n";
 	}
 	*/
     UpdateData(FALSE);
@@ -83,7 +83,7 @@ LRESULT CWiz12::OnWizardNext()
 
 LRESULT CWiz12::OnWizardBack() 
 {
-	// TODO: ���̈ʒu�ɌŗL�̏�����ǉ����邩�A�܂��͊�{�N���X���Ăяo���Ă�������
+	// TODO: この位置に固有の処理を追加するか、または基本クラスを呼び出してください
 	return IDD_EASYWIZ_DIALOG1;
 
 	return CPropertyPage::OnWizardBack();
@@ -91,7 +91,7 @@ LRESULT CWiz12::OnWizardBack()
 
 void CWiz12::GetLocalGroupList()
 {
-    // ���[�J���O���[�v���̈ꗗ���擾���܂��B
+    // ローカルグループ名の一覧を取得します。
     DWORD entriesread, entries, i; 
 	DWORD totalentries; 
 	DWORD resumehandle;
@@ -106,7 +106,7 @@ void CWiz12::GetLocalGroupList()
     GetDlgItem(IDC_COMBO_LOCALGROUP)->SendMessage( CB_RESETCONTENT, 0, 0);
 	resumehandle = 0;
 	entries = 0;
-	sprintf(mPDC, "%s", m_PDC);
+	sprintf(mPDC, "%s", (LPCSTR)m_PDC);
 	if (mPDC[0]) {
       mbstowcs( wDom, m_PDC, 65);
  	  nSts = NetGetAnyDCName(NULL, 
@@ -121,10 +121,10 @@ void CWiz12::GetLocalGroupList()
 	    m2.LoadString( IDS_STRING107 );
 	    MessageBox( m1, m2, MB_OK);
 		/*
-        if (GetUserDefaultLangID() != (LANGID)0x0411) // ���{��ȊO
+        if (GetUserDefaultLangID() != (LANGID)0x0411) // 日本語以外
 		  MessageBox("PDC not found.", "Simple setup wizard", MB_OK);
         else
-		  MessageBox("PDC ��������܂���B", "�ȒP�Z�b�g�A�b�v�E�B�U�[�h", MB_OK);
+		  MessageBox("PDC が見つかりません。", "簡単セットアップウィザード", MB_OK);
 		*/
 		mPDC[0] = '\x0';
 	  }
@@ -148,7 +148,7 @@ void CWiz12::GetLocalGroupList()
 
 void CWiz12::OnDropdownComboLocalgroup() 
 {
-	// TODO: ���̈ʒu�ɃR���g���[���ʒm�n���h���p�̃R�[�h��ǉ����Ă�������
+	// TODO: この位置にコントロール通知ハンドラ用のコードを追加してください
     UpdateData(TRUE);
 #ifdef UPDATE_20050128
 	char mLGroup[256];
@@ -167,7 +167,7 @@ void CWiz12::OnDropdownComboLocalgroup()
 
 BOOL CWiz12::OnSetActive() 
 {
-	// TODO: ���̈ʒu�ɌŗL�̏�����ǉ����邩�A�܂��͊�{�N���X���Ăяo���Ă�������
+	// TODO: この位置に固有の処理を追加するか、または基本クラスを呼び出してください
 	CPropertySheet* pSheet = (CPropertySheet*)GetParent();
 	ASSERT_KINDOF(CPropertySheet, pSheet);
 	pSheet->SetWizardButtons( PSWIZB_BACK | PSWIZB_NEXT);
@@ -179,7 +179,7 @@ void CWiz12::OnShowWindow(BOOL bShow, UINT nStatus)
 {
 	CPropertyPage::OnShowWindow(bShow, nStatus);
 	
-	// TODO: ���̈ʒu�Ƀ��b�Z�[�W �n���h���p�̃R�[�h��ǉ����Ă�������
+	// TODO: この位置にメッセージ ハンドラ用のコードを追加してください
 	if (bShow) {
       UpdateData(TRUE);
 	  CPropertySheet* pSheet = (CPropertySheet*)GetParent();
@@ -188,7 +188,7 @@ void CWiz12::OnShowWindow(BOOL bShow, UINT nStatus)
 	  CHAR mTitle[128];
       sprintf(mTitle, m, "1-2");
 	  pSheet->SetTitle(mTitle, 0);
-	  //pSheet->SetTitle("SPA-PRO Mail Server �ȒP�Z�b�g�A�b�v�E�B�U�[�h(�X�e�b�v�@�V)", 0);
+	  //pSheet->SetTitle("SPA-PRO Mail Server 簡単セットアップウィザード(ステップ　７)", 0);
       UpdateData(FALSE);
 	}
 	
@@ -196,7 +196,7 @@ void CWiz12::OnShowWindow(BOOL bShow, UINT nStatus)
 
 void CWiz12::OnKillfocusEditAdname() 
 {
-	// TODO: ���̈ʒu�ɃR���g���[���ʒm�n���h���p�̃R�[�h��ǉ����Ă�������
+	// TODO: この位置にコントロール通知ハンドラ用のコードを追加してください
 #ifdef UPDATE_20050128
 	GetLocalGroupList();
 	char mLGroup[256];

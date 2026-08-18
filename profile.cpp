@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////
+Ôªø////////////////////////////////////////////////////////////
 // Profile.c Copyright K.kawakami
 // Get profile key and data.
 ////////////////////////////////////////////////////////////
@@ -26,7 +26,7 @@ void RestoreFile(char *pfn) {
        p = fgets(mLine, sizeof(mLine), fp);
 	   if (p) {
 		 strtok(mLine, "\r\n");
-	     if (mLine[0] == '[') {  // ÉåÉWÉXÉgÉäÉLÅ[
+	     if (mLine[0] == '[') {  // „É¨„Ç∏„Çπ„Éà„É™„Ç≠„Éº
 		   strtok(mLine, "]\n");
 		   if ((q = strstr(mLine, "SPA-PRO")) ||
 			   (q = strstr(mLine, "spa-pro"))) {
@@ -57,8 +57,8 @@ void RestoreFile(char *pfn) {
 		     strcpy(mKey, &mLine[1]);
 #ifdef REGTOFILE
 		   if (nClustering && 
-			   (!strnicmp(&mKey[19], "software\\epost\\ims\\secur", 24) ||
-			    !strnicmp(&mKey[19], "software\\epost\\ims\\domain\\operation", 35))
+			   (!_strnicmp(&mKey[19], "software\\epost\\ims\\secur", 24) ||
+			    !_strnicmp(&mKey[19], "software\\epost\\ims\\domain\\operation", 35))
 			   ) {
              mKey[28] = 'E';
              mKey[29] = 'M';
@@ -66,7 +66,7 @@ void RestoreFile(char *pfn) {
              mKey[31] = 'A';
              mKey[32] = 'C';
              FileCreateKey(mMailSpoolDir, &mKey[19]);
-		   } else if (nClustering && !strnicmp(&mLine[20], "software\\emwac", 14))
+		   } else if (nClustering && !_strnicmp(&mLine[20], "software\\emwac", 14))
              FileCreateKey(mMailSpoolDir, &mKey[19]);
 		   else
 #endif
@@ -84,7 +84,7 @@ void RestoreFile(char *pfn) {
 		     if ((pVtype = strpbrk(mLine, "="))){
 		       strtok(pVname, "\"");
 		       pVtype++;
-		       if (*pVtype == '"') { // ï∂éöóÒ
+		       if (*pVtype == '"') { // ÊñáÂ≠óÂàó
 			     pValue = pVtype;
 			     pValue++;
 			     if (*pValue == '"')
@@ -92,18 +92,18 @@ void RestoreFile(char *pfn) {
 			     else
 			       strtok(pValue, "\"");
 			     pVtype = mString;
-			   } else {             // êîíl
+			   } else {             // Êï∞ÂÄ§
 			     if ((pValue = strpbrk(pVtype, ":"))) {
 			       *pValue = '\x0';
 			      pValue++;
 				 }
 			   }
-		       if (!stricmp(pVtype, "string")) {
-		         WriteProfileStringEx(&mKey[19], pVname, pValue); // ï∂éöóÒèëçûÇ›
-			   } else if  (!stricmp(pVtype, "dword")) {
-		         WriteProfileIntEx(&mKey[19], pVname, (INT)strtoul( (const char *)pValue, (char **)(pValue+7), 16 ));  // êîílèëçûÇ›
-			   } else if  (!strnicmp(pVtype, "hex", 3) && *pValue) {
-			     p3 = strrchr(pValue, '\\'); // ë±Ç´Ç™Ç†ÇÈÇ©
+		       if (!_stricmp(pVtype, "string")) {
+		         WriteProfileStringEx(&mKey[19], pVname, pValue); // ÊñáÂ≠óÂàóÊõ∏Ëæº„Åø
+			   } else if  (!_stricmp(pVtype, "dword")) {
+		         WriteProfileIntEx(&mKey[19], pVname, (INT)strtoul( (const char *)pValue, (char **)(pValue+7), 16 ));  // Êï∞ÂÄ§Êõ∏Ëæº„Åø
+			   } else if  (!_strnicmp(pVtype, "hex", 3) && *pValue) {
+			     p3 = strrchr(pValue, '\\'); // Á∂ö„Åç„Åå„ÅÇ„Çã„Åã
 			     strtok(pValue, "\\\n");
 			     strcpy(mB, pValue);
 			     if (p3) {
@@ -111,7 +111,7 @@ void RestoreFile(char *pfn) {
                      p2 = fgets(mLine2, sizeof(mLine2), fp);
 			         if (!mLine2[0] || mLine2[0] == '\n')
 				       break;
-				     p3 = strrchr(mLine2, '\\'); // ë±Ç´Ç™Ç†ÇÈÇ©
+				     p3 = strrchr(mLine2, '\\'); // Á∂ö„Åç„Åå„ÅÇ„Çã„Åã
                      strtok(mLine2, "\\\n");
 			         strcat(mB, &mLine2[2]);
 				   } while(p3 && (p2 || !feof(fp)));
@@ -120,14 +120,14 @@ void RestoreFile(char *pfn) {
 			     j = 0;
 			     memset(mBin, 0, sizeof(mBin));
 			     for (i = 0; i < n; i+=3) {
-			       /// è„à 
+			       /// ‰∏ä‰Ωç
 			       if (mB[i] >= '0' && mB[i] <= '9')
 				     c = ((mB[i] - '0') << 4);
 			       else if (mB[i] >= 'A' && mB[i] <= 'F')
 				     c = ((mB[i] - 'A' + 10) << 4);
 			       else if (mB[i] >= 'a' && mB[i] <= 'f')
 				     c = ((mB[i] - 'a' + 10) << 4);
-			       /// â∫à 
+			       /// ‰∏ã‰Ωç
 			       if (mB[i+1] >= '0' && mB[i+1] <= '9')
 				     c += (mB[i+1] - '0');
 			       else if (mB[i+1] >= 'A' && mB[i+1] <= 'F')
@@ -139,7 +139,7 @@ void RestoreFile(char *pfn) {
 				 if (strstr(pVtype, "(7)"))
 				   WriteProfileStringExType(&mKey[19], pVname, mBin, j, REG_MULTI_SZ);
 				 else
-                   WriteProfileBinaryEx(&mKey[19], pVname, mBin, j);  // ÉoÉCÉiÉäílèëçûÇ›
+                   WriteProfileBinaryEx(&mKey[19], pVname, mBin, j);  // „Éê„Ç§„Éä„É™ÂÄ§Êõ∏Ëæº„Åø
 			   }
 			 }
 		   }
@@ -168,7 +168,7 @@ void GetReg(FILE *fp, LPCTSTR lpAppName) {
   // OPEN THE KEY.
   sprintf(mkey,PROFILE_ROOT_TREE,lpAppName);
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(lpAppName, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(lpAppName, "software\\emwac", 14)) {
        retCode = 
          OpenKeyFile(mMailSpoolDir,
 		             mkey,
@@ -194,7 +194,7 @@ void GetReg(FILE *fp, LPCTSTR lpAppName) {
 	   dwcbData = sizeof(mValue);
 	   lpName[0] = mValue[0] = '\x0';
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(lpAppName, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(lpAppName, "software\\emwac", 14)) {
        retCode =
 		 KeyFileEnumValue(mMailSpoolDir,
 		                  mkey,
@@ -206,14 +206,14 @@ void GetReg(FILE *fp, LPCTSTR lpAppName) {
 
 	 } else {
 #endif
-       retCode = RegEnumValue(hKey,               // ñ‚Ç¢çáÇÌÇπëŒè€ÇÃÉLÅ[ÇÃÉnÉìÉhÉã
-                              dwIndex,            // éÊìæÇ∑ÇÈÇ◊Ç´ÉåÉWÉXÉgÉäÉGÉìÉgÉäÇÃÉCÉìÉfÉbÉNÉXî‘çÜ
-                              (LPTSTR)lpName,     // ÉåÉWÉXÉgÉäÉGÉìÉgÉäñºÇ™äiî[Ç≥ÇÍÇÈÉoÉbÉtÉ@
-                              (LPDWORD)&lpcbName, // ÉåÉWÉXÉgÉäÉGÉìÉgÉäñºÉoÉbÉtÉ@ÇÃÉTÉCÉY
-                              NULL,               // ó\ñÒçœÇ›
-                              &dwType,            // ÉåÉWÉXÉgÉäÉGÉìÉgÉäÇÃÉfÅ[É^ÇÃÉ^ÉCÉv
-                              (LPBYTE)mValue,     // ÉåÉWÉXÉgÉäÉGÉìÉgÉäÇÃÉfÅ[É^Ç™äiî[Ç≥ÇÍÇÈÉoÉbÉtÉ@
-                              &dwcbData           // ÉfÅ[É^ÉoÉbÉtÉ@ÇÃÉTÉCÉY
+       retCode = RegEnumValue(hKey,               // Âïè„ÅÑÂêà„Çè„ÅõÂØæË±°„ÅÆ„Ç≠„Éº„ÅÆ„Éè„É≥„Éâ„É´
+                              dwIndex,            // ÂèñÂæó„Åô„Çã„Åπ„Åç„É¨„Ç∏„Çπ„Éà„É™„Ç®„É≥„Éà„É™„ÅÆ„Ç§„É≥„Éá„ÉÉ„ÇØ„ÇπÁï™Âè∑
+                              (LPTSTR)lpName,     // „É¨„Ç∏„Çπ„Éà„É™„Ç®„É≥„Éà„É™Âêç„ÅåÊ†ºÁ¥ç„Åï„Çå„Çã„Éê„ÉÉ„Éï„Ç°
+                              (LPDWORD)&lpcbName, // „É¨„Ç∏„Çπ„Éà„É™„Ç®„É≥„Éà„É™Âêç„Éê„ÉÉ„Éï„Ç°„ÅÆ„Çµ„Ç§„Ç∫
+                              NULL,               // ‰∫àÁ¥ÑÊ∏à„Åø
+                              &dwType,            // „É¨„Ç∏„Çπ„Éà„É™„Ç®„É≥„Éà„É™„ÅÆ„Éá„Éº„Çø„ÅÆ„Çø„Ç§„Éó
+                              (LPBYTE)mValue,     // „É¨„Ç∏„Çπ„Éà„É™„Ç®„É≥„Éà„É™„ÅÆ„Éá„Éº„Çø„ÅåÊ†ºÁ¥ç„Åï„Çå„Çã„Éê„ÉÉ„Éï„Ç°
+                              &dwcbData           // „Éá„Éº„Çø„Éê„ÉÉ„Éï„Ç°„ÅÆ„Çµ„Ç§„Ç∫
 						      );
 #ifdef REGTOFILE
 	 }
@@ -240,14 +240,14 @@ void GetReg(FILE *fp, LPCTSTR lpAppName) {
 					j++;
 				  }
 				}
-			    // ÉoÉCÉiÉäèoóÕ
+			    // „Éê„Ç§„Éä„É™Âá∫Âäõ
 			    fputs("\n", fp);
 			    break;
 	       case REG_DWORD: 
 			    pn = (DWORD *)&mValue;
                 fprintf(fp, "\"%s\"=dword:%08x\n", lpName, *pn);
 			    break;
-		   case REG_NONE:  // ñ≥éã
+		   case REG_NONE:  // ÁÑ°Ë¶ñ
 			    break;
 		   case REG_MULTI_SZ:
                 fprintf(fp, "\"%s\"=hex(7):", lpName );
@@ -269,17 +269,17 @@ void GetReg(FILE *fp, LPCTSTR lpAppName) {
 					j++;
 				  }
 				}
-			    // ÉoÉCÉiÉäèoóÕ
+			    // „Éê„Ç§„Éä„É™Âá∫Âäõ
 			    fputs("\n", fp);
 			    break;
 		   case REG_EXPAND_SZ:
 		   default: // REG_SZ 
-			   if (!stricmp(lpName, "imagepath")) { // "ImagePath" ÇÃèÍçá
-				 if ((hFindFile = _findfirst(mValue, &FindFileData)) != -1L) { // ÉtÉ@ÉCÉãÇ™ë∂ç›Ç∑ÇÈÇ©ämîF
+			   if (!_stricmp(lpName, "imagepath")) { // "ImagePath" „ÅÆÂ†¥Âêà
+				 if ((hFindFile = _findfirst(mValue, &FindFileData)) != -1L) { // „Éï„Ç°„Ç§„É´„ÅåÂ≠òÂú®„Åô„Çã„ÅãÁ¢∫Ë™ç
                    _findclose(hFindFile);
                    fprintf(fp, "\"%s\"=\"%s\"\n", lpName, mValue);
 				 }
-			   } else {// "ImagePath" à»äOÇÕçÏê¨
+			   } else {// "ImagePath" ‰ª•Â§ñ„ÅØ‰ΩúÊàê
                  fprintf(fp, "\"%s\"=\"%s\"\n", lpName, mValue);
 			   }
 			    break;
@@ -293,7 +293,7 @@ void GetReg(FILE *fp, LPCTSTR lpAppName) {
 	dwIndex = 0;
     do {
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(lpAppName, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(lpAppName, "software\\emwac", 14)) {
        retCode =
 		 KeyFileEnumKey(mMailSpoolDir,
 		                mkey,
@@ -313,12 +313,12 @@ void GetReg(FILE *fp, LPCTSTR lpAppName) {
 #endif
       if (retCode == ERROR_SUCCESS) {
 		sprintf(mNextKey, "%s\\%s", lpAppName, lpName);
-        GetReg(fp, mNextKey); // éüÇÃäKëwÇì«Ç›çûÇ›
+        GetReg(fp, mNextKey); // Ê¨°„ÅÆÈöéÂ±§„ÇíË™≠„ÅøËæº„Åø
 	  }
       dwIndex++;
 	} while (retCode == ERROR_SUCCESS);
 #ifdef REGTOFILE
-  if (nClustering && !strnicmp(lpAppName, "software\\emwac", 14))
+  if (nClustering && !_strnicmp(lpAppName, "software\\emwac", 14))
 	CloseHandle(hFile);
   else
 #endif
@@ -378,7 +378,7 @@ DWORD GetProfileIntEx(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nDefault) {
   nReturned = (DWORD)nDefault;
   sprintf(mkey,PROFILE_ROOT_TREE,lpAppName);
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(lpAppName, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(lpAppName, "software\\emwac", 14)) {
        retCode = 
          OpenKeyFile(mMailSpoolDir,
 		             mkey,
@@ -399,7 +399,7 @@ DWORD GetProfileIntEx(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nDefault) {
   if (retCode == ERROR_SUCCESS) {
 	dwType = REG_DWORD;
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(lpAppName, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(lpAppName, "software\\emwac", 14)) {
        retCode =
 		 KeyFileQueryValueEx(mMailSpoolDir,
 		                     mkey,
@@ -455,7 +455,7 @@ DWORD GetProfileStringEx(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpDefault
     sprintf(mkey,PROFILE_ROOT_TREE,lpAppName);
   }
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(lpAppName, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(lpAppName, "software\\emwac", 14)) {
        retCode = 
          OpenKeyFile(mMailSpoolDir,
 		             mkey,
@@ -476,7 +476,7 @@ DWORD GetProfileStringEx(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpDefault
   if (retCode == ERROR_SUCCESS) {
 	dwType = REG_SZ;
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(lpAppName, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(lpAppName, "software\\emwac", 14)) {
        retCode =
 		 KeyFileQueryValueEx(mMailSpoolDir,
 		                     mkey,
@@ -525,7 +525,7 @@ DWORD GetProfileBinaryEx(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpDefault
   strcpy(lpReturnedString, lpDefault);
   sprintf(mkey,PROFILE_ROOT_TREE,lpAppName);
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(lpAppName, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(lpAppName, "software\\emwac", 14)) {
        retCode = 
          OpenKeyFile(mMailSpoolDir,
 		             mkey,
@@ -546,7 +546,7 @@ DWORD GetProfileBinaryEx(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpDefault
   if (retCode == ERROR_SUCCESS) {
 	dwType = REG_BINARY;
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(lpAppName, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(lpAppName, "software\\emwac", 14)) {
        retCode =
 		 KeyFileQueryValueEx(mMailSpoolDir,
 		                     mkey,
@@ -597,7 +597,7 @@ void WriteProfileIntEx(CHAR * KeyPath, CHAR * ValuePath, DWORD ValueInt) {
   cbData = sizeof(DWORD);
 
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(KeyPath, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(KeyPath, "software\\emwac", 14)) {
        retCode = 
          OpenKeyFile(mMailSpoolDir,
 		             RegPath,
@@ -617,7 +617,7 @@ void WriteProfileIntEx(CHAR * KeyPath, CHAR * ValuePath, DWORD ValueInt) {
 #endif
 	if (retCode == ERROR_SUCCESS) {
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(KeyPath, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(KeyPath, "software\\emwac", 14)) {
        retCode =
 		 KeyFileSetValueEx(mMailSpoolDir,
 		                     RegPath,
@@ -667,7 +667,7 @@ void WriteProfileStringExType(CHAR * KeyPath, CHAR * ValuePath, LPCTSTR ValueStr
   cbData =  Length; //strlen(ValueString);
 
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(KeyPath, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(KeyPath, "software\\emwac", 14)) {
        retCode = 
          OpenKeyFile(mMailSpoolDir,
 		             RegPath,
@@ -687,7 +687,7 @@ void WriteProfileStringExType(CHAR * KeyPath, CHAR * ValuePath, LPCTSTR ValueStr
 #endif
 	if (retCode == ERROR_SUCCESS) {
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(KeyPath, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(KeyPath, "software\\emwac", 14)) {
        retCode =
 		 KeyFileSetValueEx(mMailSpoolDir,
 		                   RegPath,
@@ -734,7 +734,7 @@ void WriteProfileBinaryEx(CHAR * KeyPath, CHAR * ValuePath, LPCTSTR ValueString,
   cbData = nSize;
 
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(KeyPath, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(KeyPath, "software\\emwac", 14)) {
        retCode = 
          OpenKeyFile(mMailSpoolDir,
 		             RegPath,
@@ -754,7 +754,7 @@ void WriteProfileBinaryEx(CHAR * KeyPath, CHAR * ValuePath, LPCTSTR ValueString,
 #endif
 	if (retCode == ERROR_SUCCESS) {
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(KeyPath, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(KeyPath, "software\\emwac", 14)) {
        retCode =
 		 KeyFileSetValueEx(mMailSpoolDir,
 		                     RegPath,
@@ -796,7 +796,7 @@ void DeleteProfile(HKEY hKeyRoot, CHAR * KeyPath, CHAR * ValuePath) {
   sprintf(RegPath, PROFILE_ROOT_TREE, KeyPath);
 
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(KeyPath, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(KeyPath, "software\\emwac", 14)) {
        retCode = 
          OpenKeyFile(mMailSpoolDir,
 		             RegPath,
@@ -816,7 +816,7 @@ void DeleteProfile(HKEY hKeyRoot, CHAR * KeyPath, CHAR * ValuePath) {
 #endif
 	if (retCode == ERROR_SUCCESS) {
 #ifdef REGTOFILE
-	 if (nClustering && !strnicmp(KeyPath, "software\\emwac", 14)) {
+	 if (nClustering && !_strnicmp(KeyPath, "software\\emwac", 14)) {
 	   retCode =
          KeyFileDeleteValue(mMailSpoolDir,
 		                    RegPath,
@@ -840,7 +840,7 @@ void CreateProfile(HKEY hKeyRoot, CHAR * KeyPath) {
   DWORD  retCode;
 
 #ifdef REGTOFILE
-   if (nClustering && !strnicmp(KeyPath, "software\\emwac", 14)) {
+   if (nClustering && !_strnicmp(KeyPath, "software\\emwac", 14)) {
      retCode =
         FileCreateKey(mMailSpoolDir,
 		              KeyPath);
