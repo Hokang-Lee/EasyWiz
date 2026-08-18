@@ -1,0 +1,27 @@
+'
+' To edit "Received:" header, preserve this file in the file name, "header.dat".
+'
+' note)
+'  Enter within 256 bytes per line.
+'  It may make an entry line more than one line.
+'
+' It is hereinafter the variable which can enter.
+' [The variable identifier]
+' &HELO         = The contents of HELO/HELO.
+' &ORIGIN-IP    = The connection origin machine IP
+' &MTA-NAME     = This mechanical name
+' &SOFT-NAME    = This soft name
+' &SOFT-VER     = The version of this software
+' &MSG-ID       = The message ID
+' &RCV{}        = The display of the description in the range of "{ }" at the mail for the receiving user.
+' &SND{}        = The display of the description in the range of "{ }" at the mail for the sender user.
+' &PER{}        = The display of the description in the range of "{xxx}" when transmission place (RCPT TO:) is single.
+' &RECIPIENT    = The address in the delivery placeÅiRCPT TO: It is possible to enter when the delivery place is one.Åj
+' &SENDER       = The delivery origin address (MAIL FROM:)
+' &DATETIME     = The time stamp
+'
+'Received: from &HELO &SND{(unverified [&ORIGIN-IP]) }by &MTA-NAME
+'Received: from &HELO &RCV{(unverified [&ORIGIN-IP]) }by &MTA-NAME
+Received: from &HELO (unverified [&ORIGIN-IP]) by &MTA-NAME
+	(&SOFT-NAME &SOFT-VER) with ESMTP id <&MSG-ID@&MTA-NAME>
+	&PER{for <&RECIPIENT>}; &DATETIME

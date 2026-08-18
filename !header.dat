@@ -1,0 +1,28 @@
+'　このファイル(header.dat)をSPARS実行フォルダに保存すると以下に記述する
+' "Received:"ヘッダを変更することが可能です。
+' 表示したくない情報などはこのファイルの記述の各項目について削除を行って
+' ください。
+' 記述行は複数にまたがって記述可能です。
+'
+' 以下変数(&変数名)は記述したヘッダに利用可能です。
+' なお、変数名は大小文字での違いはありません。
+' 使用可能な変数は以下の通り。
+' [利用できる変数名]
+' &HELO         = HELO/HELOの内容
+' &ORIGIN-IP    = 接続元マシンIP
+' &MTA-NAME     = このマシン名
+' &SOFT-NAME    = このソフト名
+' &SOFT-VER     = このソフトのバージョン
+' &MSG-ID       = メッセージID
+' &RCV{}        = "{ }"の範囲の記述を内部ユーザ宛のメールに表示
+' &SND{}        = "{ }"の範囲の記述を外部ユーザ宛のメールに表示
+' &PER{}        = "{ }"の範囲の記述を送信先(RCPT TO:)が単一の時のみ有効/同報の場合はNULL
+' &RECIPIENT    = 送信先アドレス 送信先(RCPT TO:)が単一の時のみ有効/同報の場合NULL
+' &SENDER       = 送信元アドレス (MAIL FROM:)
+' &DATETIME     = タイムスタンプ
+'
+'Received: from &HELO &SND{(unverified [&ORIGIN-IP]) }by &MTA-NAME
+'Received: from &HELO &RCV{(unverified [&ORIGIN-IP]) }by &MTA-NAME
+Received: from &HELO (unverified [&ORIGIN-IP]) by &MTA-NAME
+	(&SOFT-NAME &SOFT-VER) with ESMTP id <&MSG-ID@&MTA-NAME>
+	&PER{for <&RECIPIENT>}; &DATETIME

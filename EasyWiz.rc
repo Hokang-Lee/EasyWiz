@@ -1,0 +1,838 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 日本語 resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 17, 1\r\n"
+    "#pragma code_page(932)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\EasyWiz.rc2""  // Microsoft Visual C++ 以外のツールで編集されたリソース\r\n"
+    "#include ""l.jpn\\afxres.rc""          // 標準のコンポーネント\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\EasyWiz.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 235, 55
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "EasyWizのﾊﾞｰｼﾞｮﾝ情報"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
+    LTEXT           "EasyWiz Version 1.00",IDC_STATIC,40,10,119,8,
+                    SS_NOPREFIX
+    LTEXT           "Copyright 2003-2007 e-POST Inc. All rights reserved.",
+                    IDC_STATIC,40,25,158,8
+    DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
+END
+
+IDD_EASYWIZ_DIALOG1 DIALOGEX 0, 0, 320, 200
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "SPA-PRO Mail Server 簡単セットアップウィザード(ステップ　1)"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "メールサーバーの設定をナビゲートします。\n",IDC_STATIC,
+                    25,21,134,8
+    LTEXT           "メールアカウントをどのように管理したいですか？",
+                    IDC_STATIC,25,47,142,8
+    CONTROL         "複数のドメインでアカウントを管理したい。",
+                    IDC_RADIO_SEL1,"Button",BS_AUTORADIOBUTTON | WS_GROUP,34,
+                    68,134,10
+    CONTROL         "WINDOWSのローカルアカウントと連携させたい。",
+                    IDC_RADIO_SEL2,"Button",BS_AUTORADIOBUTTON,34,81,154,10
+    CONTROL         "WINDOWSのアクティブディレクトリ(AD)のアカウントと連携させたい。",
+                    IDC_RADIO_SEL3,"Button",BS_AUTORADIOBUTTON,34,94,211,10
+    LTEXT           "注意）　本ウィザードで設定された内容は「完了」ボタンを押すと既存の設定を「上書き」します。\n　　　　　設定済みの場合は「キャンセル」ボタンを押して終了させて下さい。",
+                    IDC_STATIC,30,133,274,23
+END
+
+IDD_EASYWIZ_DIALOG11 DIALOG DISCARDABLE  0, 0, 319, 199
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SPA-PRO Mail Server 簡単セットアップウィザード(ステップ　1-1)"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "メールグループを設定してください。",IDC_STATIC,23,20,
+                    103,8
+    LTEXT           "メールグループ",IDC_STATIC,34,70,46,8
+    COMBOBOX        IDC_COMBO_LOCALGROUP,126,67,108,84,CBS_DROPDOWN | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "既存のグループをメールグループとする時はコンボボックスの一覧から選択してください。\nメールグループを新規作成する場合はそのままグループ名を入力してください。",
+                    IDC_STATIC,33,35,279,21
+END
+
+IDD_EASYWIZ_DIALOG12 DIALOG DISCARDABLE  0, 0, 319, 199
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SPA-PRO Mail Server 簡単セットアップウィザード(ステップ　1-2)"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "接続するアクティブディレクトリ(AD)名とメールグループを設定してください。",
+                    IDC_STATIC,25,21,217,8
+    LTEXT           "アクティブディレクトリ(AD)名",IDC_STATIC,37,69,83,8
+    EDITTEXT        IDC_EDIT_ADNAME,128,67,106,13,ES_AUTOHSCROLL
+    LTEXT           "メールグループ",IDC_STATIC,37,97,46,8
+    COMBOBOX        IDC_COMBO_LOCALGROUP,128,93,108,81,CBS_DROPDOWN | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "既存のグループをメールグループとする時はコンボボックスの一覧から選択してください。\nメールグループを新規作成する場合はそのままクループ名を入力してください。",
+                    IDC_STATIC,33,35,279,21
+END
+
+IDD_EASYWIZ_DIALOG2 DIALOG DISCARDABLE  0, 0, 319, 199
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SPA-PRO Mail Server 簡単セットアップウィザード(ステップ　2)"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "使用するドメインネームサーバー(DNS)を１つ以上設定します。",
+                    IDC_STATIC,23,20,180,8
+    LTEXT           "ドメインネームサーバーの情報でメールサーバは送り先のSMTPサーバーを検出しています。\n本設定を行わない場合、目的地への送信が不可能となるサイトが発生します。",
+                    IDC_STATIC,33,35,279,21
+    LTEXT           "ＩＰアドレス (例 192.168.0.1)",IDC_STATIC,84,65,78,8
+    LTEXT           "DNS1",IDC_STATIC,38,79,18,8
+    EDITTEXT        IDC_EDIT_DNS1,67,79,116,13,ES_AUTOHSCROLL
+    LTEXT           "DNS2",IDC_STATIC,38,99,18,8
+    EDITTEXT        IDC_EDIT_DNS2,67,97,116,13,ES_AUTOHSCROLL
+    LTEXT           "DNS3",IDC_STATIC,38,119,18,8
+    EDITTEXT        IDC_EDIT_DNS3,67,115,116,13,ES_AUTOHSCROLL
+END
+
+IDD_EASYWIZ_DIALOG3 DIALOG DISCARDABLE  0, 0, 319, 199
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SPA-PRO Mail Server 簡単セットアップウィザード(ステップ　3)"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "管理するドメイン名と接続するIPアドレスを設定してください。",
+                    IDC_STATIC,23,20,172,8
+    LTEXT           "NAT内で設定しているメールサーバーはサーバーに割当てた、ローカルＩＰアドレスを設定して下さい。",
+                    IDC_STATIC,30,33,255,19
+    LTEXT           "ドメイン名 ( 例. xxxx.co.jp )",IDC_STATIC,93,57,79,8
+    LTEXT           "ＩＰアドレス (例 192.168.0.1)",IDC_STATIC,206,57,78,8
+    LTEXT           "１：",IDC_STATIC1,39,73,9,8
+    EDITTEXT        IDC_EDIT_NAME1,81,70,105,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_IP1,201,70,92,13,ES_AUTOHSCROLL
+    LTEXT           "２：",IDC_STATIC2,39,93,9,8
+    EDITTEXT        IDC_EDIT_NAME2,81,90,105,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_IP2,201,90,92,13,ES_AUTOHSCROLL
+    LTEXT           "３：",IDC_STATIC3,39,113,9,8
+    EDITTEXT        IDC_EDIT_NAME3,81,110,105,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_IP3,201,110,92,13,ES_AUTOHSCROLL
+END
+
+IDD_EASYWIZ_DIALOG4 DIALOG DISCARDABLE  0, 0, 319, 201
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SPA-PRO Mail Server 簡単セットアップウィザード(ステップ　4)"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "管理者とするメールアドレスを設定します。",IDC_STATIC,23,
+                    20,123,8
+    LTEXT           "管理者とするメールアドレスはドメイン外のメールアドレスでも構いません。\n設定は、 xxxxxx@xxxx.co.jp のように@マーク以降のドメインも設定して下さい。",
+                    IDC_STATIC,37,33,260,26
+    LTEXT           "管理者とするメールアドレス",IDC_STATIC,39,68,81,8
+    EDITTEXT        IDC_EDIT_NAME1,128,65,143,14,ES_AUTOHSCROLL
+END
+
+IDD_EASYWIZ_DIALOG5 DIALOG DISCARDABLE  0, 0, 319, 219
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SPA-PRO Mail Server 簡単セットアップウィザード(ステップ　5)"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "内容が正しければ、「完了」ボタンを押すとメールサーバーの基本設定は終了です。\nサービス開始は、コントロールダイアログより行ってください。\nユーザー登録は、ユーザーマネージャーより行ってください。",
+                    IDC_STATIC_S5,25,20,273,26
+    LTEXT           "以下の条件で設定を行います。",IDC_STATIC,25,51,92,8
+    EDITTEXT        IDC_STATIC_SETUPLIST,25,69,279,136,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+END
+
+IDD_EASYWIZ_DIALOG6 DIALOG DISCARDABLE  0, 0, 319, 219
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SPA-PRO Mail Server 簡単セットアップウィザード(ステップ　５)"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "経由したメールをアーカイブする設定を行います。",
+                    IDC_STATIC,23,20,144,8
+    LTEXT           "ＳＭＴＰサーバーを通過した全メールの内容を残したい場合に任意のメールアドレス宛に内容を送りメールボックスに保管することが出来ます。",
+                    IDC_STATIC,37,33,260,26
+    LTEXT           "アーカイブ先のメールアドレス",IDC_STATIC,39,68,87,8
+    EDITTEXT        IDC_EDIT_EMAIL,128,65,143,14,ES_AUTOHSCROLL
+END
+
+IDD_EASYWIZ_DIALOG7 DIALOG DISCARDABLE  0, 0, 319, 219
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SPA-PRO Mail Server 簡単セットアップウィザード(ステップ　６)"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "SMTP ゲートウェイとして使用しますか？",IDC_STATIC,25,21,
+                    118,8
+    CONTROL         "使用する。",IDC_CHECK_GATEWAY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,35,40,47,10
+    LTEXT           "ゲートウェイ先IP",IDC_STATIC,45,55,49,8
+    EDITTEXT        IDC_EDIT_GATEIP,100,52,74,13,ES_AUTOHSCROLL
+    LTEXT           "ポート",IDC_STATIC,177,55,19,8
+    EDITTEXT        IDC_EDIT_GATEPORT,198,52,22,12,ES_AUTOHSCROLL
+    LTEXT           "アーカイブ先IP",IDC_STATIC,46,74,47,9
+    EDITTEXT        IDC_EDIT_ARCIP,100,70,74,13,ES_AUTOHSCROLL
+    LTEXT           "ポート",IDC_STATIC,177,71,19,8
+    EDITTEXT        IDC_EDIT_ARCPORT,198,69,22,13,ES_AUTOHSCROLL
+    LTEXT           "メールのコピー先フォルダ名",IDC_STATIC,47,89,125,8
+    EDITTEXT        IDC_EDIT_FOLDER,48,102,172,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "参照",IDC_BUTTON_FOLDER,226,101,50,14
+END
+
+IDD_EASYWIZ_DIALOG8 DIALOG DISCARDABLE  0, 0, 319, 219
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SPA-PRO Mail Server 簡単セットアップウィザード(ステップ　５)"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "協調動作のための設定を行います。",IDC_STATIC,23,20,106,
+                    8
+    LTEXT           "メール送受信が設定したPC間で並列稼動出来るようになります。",
+                    IDC_STATIC,37,33,247,26
+    LTEXT           "共有メール作業フォルダ",IDC_STATIC,37,68,72,8
+    EDITTEXT        IDC_EDIT_SPOOL,129,65,113,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "参照",IDC_BUTTON_SPOOL,250,65,38,14
+    LTEXT           "共有するコンピュータ名.\n例） \\\\PC01",IDC_STATIC,37,
+                    95,82,19
+    EDITTEXT        IDC_EDIT_SHARE_COMP,129,95,112,14,ES_AUTOHSCROLL
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 4,0,0,3
+ PRODUCTVERSION 4,0,0,3
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "041104b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "e-POST Inc.\0"
+            VALUE "FileDescription", "EasyWiz MFC ｱﾌﾟﾘｹｰｼｮﾝ\0"
+            VALUE "FileVersion", "4, 0, 0, 3\0"
+            VALUE "InternalName", "EasyWiz\0"
+            VALUE "LegalCopyright", "Copyright (C) 2003-2007\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "EasyWiz.EXE\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "EasyWiz ｱﾌﾟﾘｹｰｼｮﾝ\0"
+            VALUE "ProductVersion", "4, 0, 0, 3\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x411, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 48
+    END
+
+    IDD_EASYWIZ_DIALOG1, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 313
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 193
+    END
+
+    IDD_EASYWIZ_DIALOG11, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 192
+    END
+
+    IDD_EASYWIZ_DIALOG12, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 192
+    END
+
+    IDD_EASYWIZ_DIALOG2, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 192
+    END
+
+    IDD_EASYWIZ_DIALOG3, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 192
+    END
+
+    IDD_EASYWIZ_DIALOG4, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 194
+    END
+
+    IDD_EASYWIZ_DIALOG5, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 212
+    END
+
+    IDD_EASYWIZ_DIALOG6, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 212
+    END
+
+    IDD_EASYWIZ_DIALOG7, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 212
+    END
+
+    IDD_EASYWIZ_DIALOG8, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 212
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUTBOX            "EasyWiz のﾊﾞｰｼﾞｮﾝ情報(&A)..."
+    IDS_STRING102           "アカウント管理\r\n　マルチドメイン　アカウント\r\n\r\n"
+    IDS_STRING103           "アカウント管理\r\n　Windows ローカル　アカウント\r\n"
+    IDS_STRING104           "アカウント管理\r\n　Windows アクティブディレクトリ　アカウント\r\n"
+    IDS_STRING105           "　メールグループ　%s\r\n\r\n"
+    IDS_STRING106           "　アクティブディレクトリ　%s\r\n　メールグループ　%s\r\n\r\n\r\n"
+    IDS_STRING107           "簡単セットアップウィザード"
+    IDS_STRING108           "PDC が見つかりません。"
+    IDS_STRING109           "ドメインネームサーバー\r\n　ＤＮＳ１　%s\r\n　ＤＮＳ２　%s\r\n　ＤＮＳ３　%s\r\n\r\n"
+    IDS_STRING110           "管理するドメイン名\r\n　ドメイン１　%s %s\r\n　ドメイン２　%s %s\r\n　ドメイン３　%s %s\r\n\r\n\r\n"
+    IDS_STRING111           "管理者とするメールアドレス\r\n　%s\r\n\r\n"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STRING112           "メールサーバー簡単セットアップウィザード(ステップ　%s)"
+    IDS_STRING113           "共有メール作業フォルダ\r\n %s\r\n\r\n共有コンピューター名\r\n %s\r\n"
+    IDS_STRING114           "同一のファイル ""%s"" があります。\n上書きしても良いですか？"
+    IDS_STRING115           "指定したメール作業フォルダは、開けません。\nこのコンピュータにはアクセス権がないか、接続できないデバイスを指定している可能性があるため、ウィザードで設定を中止します。\nメール作業フォルダ= [%s]"
+    IDS_STRING116           "SMTP %s\r\nGateway IP %s:%d\r\nSMTP Arcive IP %s:%d\r\nArcive Folder %s\r\n"
+END
+
+#endif    // 日本語 resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// 英語 (ｱﾒﾘｶ) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\idr_main.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 235, 55
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "EasyWiz"
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
+    LTEXT           "EasyWiz Version 1.00",IDC_STATIC,40,10,119,8,
+                    SS_NOPREFIX
+    LTEXT           "Copyright 2003-2007 e-POST Inc. All rights reserved.",
+                    IDC_STATIC,40,25,170,8
+    DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
+END
+
+IDD_EASYWIZ_DIALOG1 DIALOGEX 0, 0, 320, 200
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "E-POST Mail Server Simple setup wizard (Step 1)"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    LTEXT           "E-POST Mail Server navigation setup.",IDC_STATIC,25,21,
+                    193,8
+    LTEXT           "What kind of mail account do you want to manage?",
+                    IDC_STATIC,25,47,214,8
+    CONTROL         "Multi-Domain",IDC_RADIO_SEL1,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,34,68,134,10
+    CONTROL         "A local account of WINDOWS",IDC_RADIO_SEL2,"Button",
+                    BS_AUTORADIOBUTTON,34,81,154,10
+    CONTROL         "Active Directory (AD) account of WINDOWS",
+                    IDC_RADIO_SEL3,"Button",BS_AUTORADIOBUTTON,34,94,211,10
+    LTEXT           "(note )\nThis wizard will OVERWRITE any existing settings if you press ""Finish"".\nPlease press  ""Cancel"" now if you want to backup old settings.",
+                    IDC_STATIC,30,133,242,34
+END
+
+IDD_EASYWIZ_DIALOG11 DIALOG DISCARDABLE  0, 0, 319, 199
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Simple setup wizard (Step 1-1)"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Input a Mail Group.",IDC_STATIC,23,20,103,8
+    LTEXT           "Mail Group",IDC_STATIC,34,70,46,8
+    COMBOBOX        IDC_COMBO_LOCALGROUP,126,67,108,84,CBS_DROPDOWN | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "In case of existing groups, select from the combo box.\nWhen creating newly, input a group name.",
+                    IDC_STATIC,33,35,279,18
+END
+
+IDD_EASYWIZ_DIALOG12 DIALOG DISCARDABLE  0, 0, 319, 199
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Simple setup wizard (Step 1-2)"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Input the Active Directory (AD) name and a mail group to use.",
+                    IDC_STATIC,25,21,249,8
+    LTEXT           "Active Directory(AD)",IDC_STATIC,37,69,83,8
+    EDITTEXT        IDC_EDIT_ADNAME,128,67,106,13,ES_AUTOHSCROLL
+    LTEXT           "Mail Group",IDC_STATIC,37,97,46,8
+    COMBOBOX        IDC_COMBO_LOCALGROUP,128,93,108,81,CBS_DROPDOWN | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "In case of existing groups, select from the combo box.\nWhen creating newly, input a group name.",
+                    IDC_STATIC,33,35,279,18
+END
+
+IDD_EASYWIZ_DIALOG2 DIALOG DISCARDABLE  0, 0, 319, 199
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Simple setup wizard (Step 2)"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Please input one or more domain name server(s) (DNS) to use.",
+                    IDC_STATIC,23,20,237,8
+    LTEXT           "The mail server detects a SMTP server at the domain name server address.\nIf you do not set this, the transmission to any destination will be impossible.",
+                    IDC_STATIC,27,33,285,36
+    LTEXT           "IP Address (eg. 192.168.0.1)",IDC_STATIC,84,82,99,8
+    LTEXT           "DNS1",IDC_STATIC,38,99,24,8
+    EDITTEXT        IDC_EDIT_DNS1,73,97,116,13,ES_AUTOHSCROLL
+    LTEXT           "DNS2",IDC_STATIC,38,118,24,8
+    EDITTEXT        IDC_EDIT_DNS2,73,114,116,13,ES_AUTOHSCROLL
+    LTEXT           "DNS3",IDC_STATIC,38,137,24,8
+    EDITTEXT        IDC_EDIT_DNS3,73,132,116,13,ES_AUTOHSCROLL
+END
+
+IDD_EASYWIZ_DIALOG3 DIALOG DISCARDABLE  0, 0, 319, 199
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Simple setup wizard (Step 3)"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Input the IP address(es) which connect with the domain name to manage.",
+                    IDC_STATIC,23,20,229,8
+    LTEXT           "When connecting via NAT, input the local IP address.",
+                    IDC_STATIC,30,33,183,8
+    LTEXT           "Domain Name (eg. xxxx.com )",IDC_STATIC,81,57,101,8
+    LTEXT           "IP Address (eg. 192.168.0.1)",IDC_STATIC,201,57,97,8
+    LTEXT           "1:",IDC_STATIC1,39,73,9,8
+    EDITTEXT        IDC_EDIT_NAME1,81,70,105,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_IP1,201,70,92,13,ES_AUTOHSCROLL
+    LTEXT           "2:",IDC_STATIC2,39,93,9,8
+    EDITTEXT        IDC_EDIT_NAME2,81,90,105,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_IP2,201,90,92,13,ES_AUTOHSCROLL
+    LTEXT           "3:",IDC_STATIC3,39,113,9,8
+    EDITTEXT        IDC_EDIT_NAME3,81,110,105,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_IP3,201,110,92,13,ES_AUTOHSCROLL
+END
+
+IDD_EASYWIZ_DIALOG4 DIALOG DISCARDABLE  0, 0, 319, 201
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Simple setup wizard (Step 4)"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Set the mail address of the postmaster.",IDC_STATIC,23,
+                    20,166,8
+    LTEXT           "The mail address for a postmaster may be anything except the domain to manage.\nThe entry includes an ""at"" mark, like xxxxxx@xxxx.com.",
+                    IDC_STATIC,37,33,260,21
+    LTEXT           "Postmaster",IDC_STATIC,39,68,81,8
+    EDITTEXT        IDC_EDIT_NAME1,128,65,143,14,ES_AUTOHSCROLL
+END
+
+IDD_EASYWIZ_DIALOG5 DIALOG DISCARDABLE  0, 0, 319, 219
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Simple setup wizard (Step 5)"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Please confirm if the settings are right.\nThe basic setting for the mail server is complete when pressing ""Finish"".\nThe service starts from the 'E-POST Mail Control'.\nPlease use 'E-POST Mail Account manager' for user registration.",
+                    IDC_STATIC_S5,25,13,273,33
+    LTEXT           "The following settings will be applied:",IDC_STATIC,25,
+                    51,115,8
+    EDITTEXT        IDC_STATIC_SETUPLIST,24,70,282,135,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+END
+
+IDD_EASYWIZ_DIALOG6 DIALOG DISCARDABLE  0, 0, 319, 219
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Simple setup wizard (Step 5)"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Archives of mail data.",IDC_STATIC,23,20,151,8
+    LTEXT           "In the entering mail address, it archives a mail.",
+                    IDC_STATIC,37,33,260,26
+    LTEXT           "Mail Address",IDC_STATIC,39,68,88,8
+    EDITTEXT        IDC_EDIT_EMAIL,128,65,143,14,ES_AUTOHSCROLL
+END
+
+IDD_EASYWIZ_DIALOG7 DIALOG DISCARDABLE  0, 0, 319, 219
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Simple setup wizard (Step 6)"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Setting of SMTP Gateway.",IDC_STATIC,25,21,99,8
+    CONTROL         "Enable",IDC_CHECK_GATEWAY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,41,44,55,11
+    LTEXT           "Gateway IP",IDC_STATIC,45,67,36,8
+    EDITTEXT        IDC_EDIT_GATEIP,89,64,84,13,ES_AUTOHSCROLL
+    LTEXT           "port",IDC_STATIC,185,68,22,9
+    EDITTEXT        IDC_EDIT_GATEPORT,210,64,26,13,ES_AUTOHSCROLL
+    LTEXT           "Archive IP",IDC_STATIC,47,88,34,8
+    EDITTEXT        IDC_EDIT_ARCIP,89,84,84,12,ES_AUTOHSCROLL
+    LTEXT           "port",IDC_STATIC,185,85,22,9
+    EDITTEXT        IDC_EDIT_ARCPORT,210,83,26,15,ES_AUTOHSCROLL
+    LTEXT           "Copy folder",IDC_STATIC,41,105,36,8
+    EDITTEXT        IDC_EDIT_FOLDER,42,119,194,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "View",IDC_BUTTON_FOLDER,244,118,51,15
+END
+
+IDD_EASYWIZ_DIALOG8 DIALOG DISCARDABLE  0, 0, 319, 219
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Simple setup wizard (Step 5)"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "The entry of the parallel PC operation",IDC_STATIC,23,
+                    20,104,8
+    LTEXT           "The sending and receiving operates in parallel among the PCs when entering.",
+                    IDC_STATIC,37,33,247,26
+    LTEXT           "Sharing mail spool folder",IDC_STATIC,37,68,72,8
+    EDITTEXT        IDC_EDIT_SPOOL,128,65,113,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "View",IDC_BUTTON_SPOOL,250,65,38,14
+    LTEXT           "Sharing Computer name.\neg. \\\\PC01",IDC_STATIC,37,95,
+                    69,25
+    EDITTEXT        IDC_EDIT_SHARE_COMP,128,95,112,14,ES_AUTOHSCROLL
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 4,0,0,3
+ PRODUCTVERSION 4,0,0,3
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "041104b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "e-POST Inc.\0"
+            VALUE "FileDescription", "EasyWiz MFC Application\0"
+            VALUE "FileVersion", "4, 0, 0, 3\0"
+            VALUE "InternalName", "EasyWiz\0"
+            VALUE "LegalCopyright", "Copyright (C) 2003-2007\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "EasyWiz.EXE\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "EasyWiz Application\0"
+            VALUE "ProductVersion", "4, 0, 0, 3\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x411, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 48
+    END
+
+    IDD_EASYWIZ_DIALOG1, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 313
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 193
+    END
+
+    IDD_EASYWIZ_DIALOG11, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 192
+    END
+
+    IDD_EASYWIZ_DIALOG12, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 192
+    END
+
+    IDD_EASYWIZ_DIALOG2, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 192
+    END
+
+    IDD_EASYWIZ_DIALOG3, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 192
+    END
+
+    IDD_EASYWIZ_DIALOG4, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 194
+    END
+
+    IDD_EASYWIZ_DIALOG5, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 212
+    END
+
+    IDD_EASYWIZ_DIALOG6, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 212
+    END
+
+    IDD_EASYWIZ_DIALOG7, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 212
+    END
+
+    IDD_EASYWIZ_DIALOG8, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 212
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUTBOX            "About EasyWiz (&A)..."
+    IDS_STRING102           "Account\n Multi-Domain Account.\r\n\r\n"
+    IDS_STRING103           "Account\r\n The local account of WINDOWS.\r\n"
+    IDS_STRING104           "Account\n The Active Directory(AD) account of WINDOWS.\r\n"
+    IDS_STRING105           " Mail Group %s\r\n\r\n"
+    IDS_STRING106           " Active Directory(AD) %s\n Mail Group %s\r\n\r\n\r\n"
+    IDS_STRING107           "Simple Setup Wizard"
+    IDS_STRING108           "PDC not found."
+    IDS_STRING109           "Domain Name Server (DNS)\r\n DNS1 %s\r\n DNS2 %s\r\n DNS3 %s\r\n\r\n\r\n"
+    IDS_STRING110           "Domain Name to manage\r\n Domain Name1 %s %s\r\n Domain Name2 %s %s\r\n Domain Name3 %s %s\r\n\r\n"
+    IDS_STRING111           "Postmaster\n %s\r\n\r\n\r\n"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STRING112           "Simple setup wizard (Step %s)"
+    IDS_STRING113           "Sharing mail spool folder\n %s\r\n\r\nSharing Computer\n %s\r\n"
+    IDS_STRING114           "There is a file already. ""%s"".\nOverwrite OK?"
+    IDS_STRING115           "The spool folder can not be opened.\n There is not a right of access or can't connect the device.\n Stopped the program.\nSpool folder= [%s]"
+    IDS_STRING116           "SMTP %s\r\nGateway IP %s:%d\r\nSMTP Arcive IP %s:%d\r\nArcive Folder %s\r\n"
+END
+
+#endif    // 英語 (ｱﾒﾘｶ) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE 17, 1
+#pragma code_page(932)
+#endif //_WIN32
+#include "res\EasyWiz.rc2"  // Microsoft Visual C++ 以外のツールで編集されたリソース
+#include "l.jpn\afxres.rc"          // 標準のコンポーネント
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
