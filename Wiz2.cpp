@@ -86,12 +86,8 @@ LRESULT CWiz2::OnWizardNext()
 	m_DNS1.TrimLeft(); m_DNS1.TrimRight();
 	m_DNS2.TrimLeft(); m_DNS2.TrimRight();
 	m_DNS3.TrimLeft(); m_DNS3.TrimRight();
-	if (m_DNS1.IsEmpty()) {
-		AfxMessageBox("DNS1 を入力してください。", MB_OK | MB_ICONEXCLAMATION);
-		GetDlgItem(IDC_EDIT_DNS1)->SetFocus();
-		return -1;
-	}
-	if (!IsValidIPv4(m_DNS1)) {
+	// DNSは未入力でも進める。入力された項目だけ形式を確認する。
+	if (!m_DNS1.IsEmpty() && !IsValidIPv4(m_DNS1)) {
 		AfxMessageBox("DNS1 に正しい IPv4 アドレスを入力してください。\n例: 192.168.0.1", MB_OK | MB_ICONEXCLAMATION);
 		GetDlgItem(IDC_EDIT_DNS1)->SetFocus();
 		return -1;

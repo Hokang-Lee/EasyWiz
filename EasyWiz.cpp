@@ -11,6 +11,7 @@
 #include "Wiz3.h"
 #include "Wiz4.h"
 #include "Wiz5.h"
+#include "NetworkSetup.h"
 #ifdef LGWAN
 #include "Wiz6.h"
 #include "Wiz7.h"
@@ -126,7 +127,7 @@ void CEasyWizApp::StartSheet()
    char      *p, mPath[256], mFn[256], mCmpName[256], mMMLISTFn[256];
 
 #ifdef E_POST
-   CPropertySheet cPropSheet("E-Post Mail Server 簡単設定ウィザード");
+   CPropertySheet cPropSheet("EasyWiz - メールサーバ・SMTPサーバ設定");
 #else
    CPropertySheet cPropSheet("SPA-PRO Mail Server 簡単設定ウィザード");
 #endif
@@ -160,13 +161,13 @@ void CEasyWizApp::StartSheet()
   Wiz2.m_DNS1 = (CString)"";
   Wiz2.m_DNS2 = (CString)""; 
   Wiz2.m_DNS3 = (CString)"";
-  Wiz3.m_Name1 = (CString)"";
+  Wiz3.m_Name1 = (CString)"test-sample.jp";
   Wiz3.m_Name2 = (CString)"";
   Wiz3.m_Name3 = (CString)"";
-  Wiz3.m_IP1 = (CString)"";
+  Wiz3.m_IP1 = GetPrimaryIPv4Address();
   Wiz3.m_IP2 = (CString)"";
   Wiz3.m_IP3 = (CString)"";
-  Wiz4.m_Postmaster = (CString)"";
+  Wiz4.m_Postmaster = GenerateRandomMailAddress("test-sample.jp");
   //////////////////////////////////////////////////////
 #ifdef E_POST
   FILE *fp;
@@ -195,14 +196,21 @@ void CEasyWizApp::StartSheet()
    ///// スプール先はレジストリから取得
    sprintf(mSpool, "%c:\\mail", (char)(_getdrive() + 'A' - 1 ));
    GetProfileStringEx(SOFT_REG, "MailSpoolDir", "", mMailSpoolDir, sizeof(mMailSpoolDir)); // メールボックスフォルダ
+   CString mailSpool64 = GetMailServerStringSetting64("MailSpoolDir", "");
+   if (!mailSpool64.IsEmpty()) {
+     strncpy(mMailSpoolDir, (LPCTSTR)mailSpool64, sizeof(mMailSpoolDir) - 1);
+     mMailSpoolDir[sizeof(mMailSpoolDir) - 1] = '\0';
+   }
    if (!mMailSpoolDir[0])
 	 strcpy(mMailSpoolDir, mSpool);
    Wiz8.m_MailSpoolDir = (CString)mMailSpoolDir;
    Wiz8.m_Computername = (CString)"";
    ///// 製品コード取得
-   nProductcode = GetProfileIntEx(SOFT_REG, "Productcode", (int)0); // 0:Mail Server, 1:SMTP Server
+   nProductcode = GetMailServerDwordSetting64("Productcode",
+     GetProfileIntEx(SOFT_REG, "Productcode", (int)0)); // 0:Mail Server, 1:SMTP Server
    ///// クラスタ対応モードはレジストリから取得
-   nClustering = GetProfileIntEx(SOFT_REG, "Clustering", (int)0);
+   nClustering = GetMailServerDwordSetting64("Clustering",
+     GetProfileIntEx(SOFT_REG, "Clustering", (int)0));
 #endif
   //////////////////////////////////////////////////////
   if (cPropSheet.DoModal() == ID_WIZFINISH) {
@@ -516,6 +524,11 @@ void CEasyWizApp::StartSheet()
 	   fclose(fp);
 	 }
 #endif
+
+     // 設定後の作業を自動化する。Mail Server製品ではPOP3/IMAPも確認する。
+     CString verifyAddress = Wiz3.m_IP1.IsEmpty() ? CString("127.0.0.1") : Wiz3.m_IP1;
+     CString verification = RunMailServerVerification(verifyAddress, Wiz4.m_Postmaster, nProductcode == 0);
+     MessageBox(NULL, verification, "EasyWiz - メールサーバ設定・疎通テスト結果", MB_OK | MB_ICONINFORMATION);
 #ifdef REGTOFILE
   } else { // ウィザードキャンセル
      if (nClustering && !_strnicmp(PRODUCTS_ROOT, "software\\emwac", 14)) {
