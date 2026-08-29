@@ -183,6 +183,127 @@ static void PumpWaitingMessages()
     }
 }
 
+struct ManagerGuidanceWindowData
+{
+    CString body;
+    CString emphasis;
+    HWND bodyWindow;
+    HWND emphasisWindow;
+    HFONT boldFont;
+};
+
+static LRESULT CALLBACK ManagerGuidanceWindowProc(HWND window, UINT message,
+    WPARAM wParam, LPARAM lParam)
+{
+    ManagerGuidanceWindowData *data = reinterpret_cast<ManagerGuidanceWindowData *>(
+        GetWindowLongPtr(window, GWLP_USERDATA));
+    if (message == WM_NCCREATE) {
+        CREATESTRUCT *create = reinterpret_cast<CREATESTRUCT *>(lParam);
+        data = reinterpret_cast<ManagerGuidanceWindowData *>(create->lpCreateParams);
+        SetWindowLongPtr(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(data));
+    }
+    if (message == WM_CREATE && data) {
+        HWND icon = CreateWindow("STATIC", NULL, WS_CHILD | WS_VISIBLE | SS_ICON,
+            24, 30, 36, 36, window, NULL, AfxGetInstanceHandle(), NULL);
+        SendMessage(icon, STM_SETICON,
+            reinterpret_cast<WPARAM>(LoadIcon(NULL, IDI_INFORMATION)), 0);
+        data->bodyWindow = CreateWindow("STATIC", data->body,
+            WS_CHILD | WS_VISIBLE | SS_LEFT,
+            78, 28, 455, 174, window, NULL, AfxGetInstanceHandle(), NULL);
+        data->emphasisWindow = CreateWindow("STATIC", data->emphasis,
+            WS_CHILD | WS_VISIBLE | SS_LEFT,
+            78, 210, 455, 48, window, NULL, AfxGetInstanceHandle(), NULL);
+        HWND ok = CreateWindow("BUTTON", "OK",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON,
+            435, 278, 98, 32, window, reinterpret_cast<HMENU>(IDOK),
+            AfxGetInstanceHandle(), NULL);
+        HFONT normalFont = reinterpret_cast<HFONT>(GetStockObject(DEFAULT_GUI_FONT));
+        LOGFONT logFont = {0};
+        GetObject(normalFont, sizeof(logFont), &logFont);
+        logFont.lfWeight = FW_BOLD;
+        data->boldFont = CreateFontIndirect(&logFont);
+        SendMessage(data->bodyWindow, WM_SETFONT,
+            reinterpret_cast<WPARAM>(normalFont), TRUE);
+        SendMessage(data->emphasisWindow, WM_SETFONT,
+            reinterpret_cast<WPARAM>(data->boldFont), TRUE);
+        SendMessage(ok, WM_SETFONT, reinterpret_cast<WPARAM>(normalFont), TRUE);
+        SetFocus(ok);
+        return 0;
+    }
+    if (message == WM_COMMAND && LOWORD(wParam) == IDOK) {
+        DestroyWindow(window);
+        return 0;
+    }
+    if (message == WM_CLOSE) {
+        DestroyWindow(window);
+        return 0;
+    }
+    if (message == WM_DESTROY && data && data->boldFont) {
+        DeleteObject(data->boldFont);
+        data->boldFont = NULL;
+        return 0;
+    }
+    return DefWindowProc(window, message, wParam, lParam);
+}
+
+static void ShowManagerGuidance(LPCTSTR title, LPCTSTR body, LPCTSTR emphasis)
+{
+    static LPCTSTR className = "EasyWiz2ManagerGuidanceWindow";
+    static BOOL registered = FALSE;
+    if (!registered) {
+        WNDCLASS windowClass = {0};
+        windowClass.lpfnWndProc = ManagerGuidanceWindowProc;
+        windowClass.hInstance = AfxGetInstanceHandle();
+        windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+        windowClass.hIcon = LoadIcon(NULL, IDI_INFORMATION);
+        windowClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_BTNFACE + 1);
+        windowClass.lpszClassName = className;
+        registered = RegisterClass(&windowClass) != 0;
+    }
+
+    ManagerGuidanceWindowData data;
+    data.body = body;
+    data.emphasis = emphasis;
+    data.bodyWindow = NULL;
+    data.emphasisWindow = NULL;
+    data.boldFont = NULL;
+    HWND owner = GetActiveWindow();
+    HWND window = CreateWindowEx(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
+        className, title, WS_POPUP | WS_CAPTION | WS_SYSMENU,
+        CW_USEDEFAULT, CW_USEDEFAULT, 575, 360, owner, NULL,
+        AfxGetInstanceHandle(), &data);
+    if (!window) {
+        CString fallback(body);
+        fallback += "\r\n\r\n";
+        fallback += emphasis;
+        MessageBox(owner, fallback, title,
+            MB_OK | MB_ICONINFORMATION | MB_TOPMOST | MB_SETFOREGROUND);
+        return;
+    }
+    RECT bounds, workArea;
+    GetWindowRect(window, &bounds);
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+    int x = workArea.left + ((workArea.right - workArea.left) -
+        (bounds.right - bounds.left)) / 2;
+    int y = workArea.top + ((workArea.bottom - workArea.top) -
+        (bounds.bottom - bounds.top)) / 2;
+    SetWindowPos(window, HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE);
+    if (owner) EnableWindow(owner, FALSE);
+    ShowWindow(window, SW_SHOW);
+    UpdateWindow(window);
+    MSG message;
+    while (IsWindow(window) && GetMessage(&message, NULL, 0, 0) > 0) {
+        if (!IsDialogMessage(window, &message)) {
+            TranslateMessage(&message);
+            DispatchMessage(&message);
+        }
+    }
+    if (owner) {
+        EnableWindow(owner, TRUE);
+        SetActiveWindow(owner);
+    }
+}
+
 static BOOL FillManagerImportDialog(DWORD processId, LPCTSTR importPath)
 {
     ManagerWindowSearch search = {processId, NULL};
@@ -232,7 +353,7 @@ static BOOL RunAccountManagerImport(LPCTSTR mailAddress,
     if (MessageBox(NULL, confirmation,
         adAccount ? "EasyWiz2 - AD認証ファイル登録" :
         "EasyWiz2 - 管理者アカウント登録",
-        MB_YESNO | MB_ICONQUESTION) != IDYES) {
+        MB_YESNO | MB_ICONQUESTION | MB_TOPMOST | MB_SETFOREGROUND) != IDYES) {
         detail = "ユーザー操作により登録を省略";
         return FALSE;
     }
@@ -271,27 +392,30 @@ static BOOL RunAccountManagerImport(LPCTSTR mailAddress,
     }
 
     CString guidance;
+    CString guidanceEmphasis;
     if (adAccount) {
       guidance.Format(
         "Managerで次の既存ADユーザーをインポートし、SMTP認証ファイルを登録してください。\r\n\r\n"
         "アカウント: %s\r\n\r\n"
         "［アカウント］→［ユーザー］→［ユーザー インポート］を開くと、\r\n"
-        "ファイル名をEasyWiz2が自動入力します。\r\n\r\n"
-        "登録後にManagerを閉じると、EasyWiz2がテスト送信を続けます。\r\n"
-        "一時ファイルはManager終了後に削除されます。",
+        "ファイル名をEasyWiz2が自動入力します。",
         (LPCTSTR)address);
+      guidanceEmphasis =
+        "登録後にManagerを閉じると、EasyWiz2がテスト送信を続けます。\r\n"
+        "一時ファイルはManager終了後に削除されます。";
     } else {
       guidance.Format(
         "Managerで次のアカウントをインポートしてください。\r\n\r\n"
         "アカウント: %s\r\nパスワード: %s\r\n\r\n"
         "［アカウント］→［ユーザー］→［ユーザー インポート］を開くと、\r\n"
-        "ファイル名をEasyWiz2が自動入力します。\r\n\r\n"
-        "登録後にManagerを閉じると、EasyWiz2が登録確認とテスト送信を続けます。",
+        "ファイル名をEasyWiz2が自動入力します。",
         (LPCTSTR)address, (LPCTSTR)password);
+      guidanceEmphasis =
+        "登録後にManagerを閉じると、EasyWiz2が登録確認とテスト送信を続けます。";
     }
-    MessageBox(NULL, guidance,
+    ShowManagerGuidance(
         adAccount ? "EasyWiz2 - AD認証ファイル登録" :
-        "EasyWiz2 - Managerインポート", MB_OK | MB_ICONINFORMATION);
+        "EasyWiz2 - Managerインポート", guidance, guidanceEmphasis);
 
     SHELLEXECUTEINFO execute = {0};
     execute.cbSize = sizeof(execute);
@@ -439,7 +563,9 @@ public:
         CString className = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW,
             LoadCursor(NULL, IDC_WAIT), (HBRUSH)(COLOR_BTNFACE + 1), NULL);
         const DWORD style = WS_POPUP | WS_CAPTION | WS_VISIBLE;
-        const DWORD exStyle = WS_EX_TOPMOST | WS_EX_DLGMODALFRAME;
+        // Managerのインポート画面など、ユーザーが操作すべき外部画面を
+        // 隠さないよう、進捗画面は常時最前面にはしない。
+        const DWORD exStyle = WS_EX_DLGMODALFRAME;
         const int clientWidth = 430;
         const int clientHeight = 125;
         CRect windowRect(0, 0, clientWidth, clientHeight);
