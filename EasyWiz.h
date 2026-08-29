@@ -14,6 +14,11 @@
 
 #include "resource.h"		// ƒƒCƒ“ ƒVƒ“ƒ{ƒ‹
 
+BOOL IsMailServerProduct();
+CString GetProductDisplayName();
+CString GetWizardTitleFormat();
+BOOL CloseRunningManagerProcesses(CString& detail);
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CEasyWizApp:

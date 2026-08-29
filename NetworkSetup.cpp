@@ -11,6 +11,118 @@
 #include <shellapi.h>
 #include <shlobj.h>
 
+static CString Win32ErrorText(DWORD error)
+{
+    LPTSTR buffer = NULL;
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS, NULL, error, 0, (LPTSTR)&buffer, 0, NULL);
+    CString text = buffer ? buffer : "不明なエラー";
+    if (buffer) LocalFree(buffer);
+    text.TrimRight();
+    return text;
+}
+
+static BOOL ValidateAdAccount(LPCTSTR authUser, LPCTSTR password,
+    LPCTSTR adName, LPCTSTR mailGroup, CString& resolvedLogonId,
+    CString& detail)
+{
+    resolvedLogonId.Empty();
+    if (!authUser || !authUser[0] || !password || !password[0]) {
+        detail = "ADユーザー名またはパスワードが入力されていません";
+        return FALSE;
+    }
+
+    CString user(authUser), logonUser(authUser), logonDomain;
+    int slash = user.Find('\\');
+    if (slash > 0) {
+        logonDomain = user.Left(slash);
+        logonUser = user.Mid(slash + 1);
+    } else if (user.Find('@') < 0 && adName && adName[0]) {
+        CString selectedDomain(adName);
+        // LogonUserのドメイン引数には通常NetBIOS名を渡す。DNS形式が
+        // 選択された場合は、UPNへ変換してドメイン引数を省略する。
+        if (selectedDomain.Find('.') >= 0)
+            logonUser.Format("%s@%s", (LPCTSTR)user, (LPCTSTR)selectedDomain);
+        else
+            logonDomain = selectedDomain;
+    }
+
+    HANDLE token = NULL;
+    if (!LogonUser(logonUser,
+        logonDomain.IsEmpty() ? NULL : (LPCTSTR)logonDomain,
+        password, LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT, &token)) {
+        DWORD error = GetLastError();
+        detail.Format("AD資格情報を確認できません（認証ID: %s、エラー %lu: %s）",
+            authUser, error, (LPCTSTR)Win32ErrorText(error));
+        return FALSE;
+    }
+
+    // 認証済みトークンからWindowsが解決した正式なSAMアカウント名を得る。
+    // 入力されたDNSドメイン名をNetBIOS名として推測してはならない。
+    DWORD tokenSize = 0;
+    GetTokenInformation(token, TokenUser, NULL, 0, &tokenSize);
+    if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+        PTOKEN_USER tokenUser = (PTOKEN_USER)LocalAlloc(LPTR, tokenSize);
+        if (tokenUser && GetTokenInformation(token, TokenUser,
+            tokenUser, tokenSize, &tokenSize)) {
+            CHAR account[256] = {0};
+            CHAR domain[256] = {0};
+            DWORD accountSize = sizeof(account);
+            DWORD tokenDomainSize = sizeof(domain);
+            SID_NAME_USE accountType;
+            if (LookupAccountSid(NULL, tokenUser->User.Sid, account,
+                &accountSize, domain, &tokenDomainSize, &accountType)) {
+                if (domain[0])
+                    resolvedLogonId.Format("%s\\%s", domain, account);
+                else
+                    resolvedLogonId = account;
+            }
+        }
+        if (tokenUser) LocalFree(tokenUser);
+    }
+    if (resolvedLogonId.IsEmpty())
+        resolvedLogonId = authUser;
+
+    if (!mailGroup || !mailGroup[0]) {
+        CloseHandle(token);
+        detail = "ADメールグループが指定されていません";
+        return FALSE;
+    }
+
+    CString account(mailGroup);
+    DWORD sidSize = 0, domainSize = 0;
+    SID_NAME_USE sidType;
+    LookupAccountName(NULL, account, NULL, &sidSize, NULL, &domainSize, &sidType);
+    if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+        PSID sid = (PSID)LocalAlloc(LPTR, sidSize);
+        LPTSTR domain = (LPTSTR)LocalAlloc(LPTR, domainSize * sizeof(TCHAR));
+        BOOL resolved = sid && domain && LookupAccountName(NULL, account, sid,
+            &sidSize, domain, &domainSize, &sidType);
+        BOOL member = FALSE;
+        if (resolved) CheckTokenMembership(token, sid, &member);
+        if (sid) LocalFree(sid);
+        if (domain) LocalFree(domain);
+        CloseHandle(token);
+        if (!resolved) {
+            detail.Format("ADメールグループ「%s」を確認できません", mailGroup);
+            return FALSE;
+        }
+        if (!member) {
+            detail.Format("%s はADメールグループ「%s」のメンバーではありません",
+                authUser, mailGroup);
+            return FALSE;
+        }
+    } else {
+        CloseHandle(token);
+        detail.Format("ADメールグループ「%s」を確認できません", mailGroup);
+        return FALSE;
+    }
+
+    detail.Format("資格情報とADメールグループ所属を確認済み（入力ID: %s、Windows認証ID: %s、グループ: %s）",
+        authUser, (LPCTSTR)resolvedLogonId, mailGroup);
+    return TRUE;
+}
+
 CString GenerateRandomMailAddress(LPCTSTR domainName)
 {
     GUID id = {0};
@@ -89,7 +201,8 @@ static BOOL FillManagerImportDialog(DWORD processId, LPCTSTR importPath)
     return set;
 }
 
-static BOOL RunAccountManagerImport(LPCTSTR mailAddress, CString& detail)
+static BOOL RunAccountManagerImport(LPCTSTR mailAddress,
+    LPCTSTR suppliedPassword, BOOL adAccount, CString& detail)
 {
     CString address(mailAddress);
     int at = address.Find('@');
@@ -107,27 +220,33 @@ static BOOL RunAccountManagerImport(LPCTSTR mailAddress, CString& detail)
     else
         managerPath = "Manager.exe";
     if (GetFileAttributes(managerPath) == INVALID_FILE_ATTRIBUTES) {
-        detail = "Manager.exeがEasyWizと同じフォルダにありません";
+        detail = "Manager.exeがEasyWiz2と同じフォルダにありません";
         return FALSE;
     }
 
-    if (MessageBox(NULL,
+    CString confirmation = adAccount ?
+        "既存のADユーザー用SMTP認証ファイルをManagerへ登録しますか？\r\n\r\n"
+        "［はい］を選ぶと一時インポートファイルを作成してManagerを起動します。" :
         "ランダムな管理者アカウントをManagerへ登録しますか？\r\n\r\n"
-        "［はい］を選ぶとインポートファイルを作成してManagerを起動します。",
-        "EasyWiz - 管理者アカウント登録", MB_YESNO | MB_ICONQUESTION) != IDYES) {
+        "［はい］を選ぶとインポートファイルを作成してManagerを起動します。";
+    if (MessageBox(NULL, confirmation,
+        adAccount ? "EasyWiz2 - AD認証ファイル登録" :
+        "EasyWiz2 - 管理者アカウント登録",
+        MB_YESNO | MB_ICONQUESTION) != IDYES) {
         detail = "ユーザー操作により登録を省略";
         return FALSE;
     }
 
     CString account = address.Left(at);
     CString domain = address.Mid(at + 1);
-    CString password = GenerateRandomPassword();
+    CString password = suppliedPassword && suppliedPassword[0] ?
+        CString(suppliedPassword) : GenerateRandomPassword();
     char desktopPath[MAX_PATH] = {0};
     if (FAILED(SHGetFolderPath(NULL, CSIDL_DESKTOPDIRECTORY | CSIDL_FLAG_CREATE,
         NULL, SHGFP_TYPE_CURRENT, desktopPath))) {
         GetTempPath(MAX_PATH, desktopPath);
     }
-    CString importDirectory = CString(desktopPath) + "\\EasyWiz-Import";
+    CString importDirectory = CString(desktopPath) + "\\EasyWiz2-Import";
     CreateDirectory(importDirectory, NULL);
     CString importPath = importDirectory + "\\" + account + "-IMAP-import.txt";
 
@@ -152,14 +271,27 @@ static BOOL RunAccountManagerImport(LPCTSTR mailAddress, CString& detail)
     }
 
     CString guidance;
-    guidance.Format(
+    if (adAccount) {
+      guidance.Format(
+        "Managerで次の既存ADユーザーをインポートし、SMTP認証ファイルを登録してください。\r\n\r\n"
+        "アカウント: %s\r\n\r\n"
+        "［アカウント］→［ユーザー］→［ユーザー インポート］を開くと、\r\n"
+        "ファイル名をEasyWiz2が自動入力します。\r\n\r\n"
+        "登録後にManagerを閉じると、EasyWiz2がテスト送信を続けます。\r\n"
+        "一時ファイルはManager終了後に削除されます。",
+        (LPCTSTR)address);
+    } else {
+      guidance.Format(
         "Managerで次のアカウントをインポートしてください。\r\n\r\n"
         "アカウント: %s\r\nパスワード: %s\r\n\r\n"
         "［アカウント］→［ユーザー］→［ユーザー インポート］を開くと、\r\n"
-        "ファイル名をEasyWizが自動入力します。\r\n\r\n"
-        "登録後にManagerを閉じると、EasyWizが登録確認とテスト送信を続けます。",
+        "ファイル名をEasyWiz2が自動入力します。\r\n\r\n"
+        "登録後にManagerを閉じると、EasyWiz2が登録確認とテスト送信を続けます。",
         (LPCTSTR)address, (LPCTSTR)password);
-    MessageBox(NULL, guidance, "EasyWiz - Managerインポート", MB_OK | MB_ICONINFORMATION);
+    }
+    MessageBox(NULL, guidance,
+        adAccount ? "EasyWiz2 - AD認証ファイル登録" :
+        "EasyWiz2 - Managerインポート", MB_OK | MB_ICONINFORMATION);
 
     SHELLEXECUTEINFO execute = {0};
     execute.cbSize = sizeof(execute);
@@ -200,7 +332,8 @@ static BOOL DirectoryExists(const CString& path)
         (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
-static BOOL ResolveInboxFolder(LPCTSTR mailAddress, CString& folder, CString& detail)
+static BOOL ResolveInboxFolder(LPCTSTR mailAddress,
+    LPCTSTR configuredInboxTemplate, CString& folder, CString& detail)
 {
     CString address(mailAddress);
     int at = address.Find('@');
@@ -210,8 +343,11 @@ static BOOL ResolveInboxFolder(LPCTSTR mailAddress, CString& folder, CString& de
     }
     CString account = address.Left(at);
     CString domain = address.Mid(at + 1);
-    CString inboxTemplate = GetMailServerStringSetting64(
-        "MailInBoxDir", "C:\\mail\\inbox\\%USERNAME%");
+    // ウィザードが今回実際に設定したパスを最優先する。クラスタ構成では
+    // 共有設定ファイルが正で、ローカルレジストリが旧値のことがある。
+    CString inboxTemplate = configuredInboxTemplate && configuredInboxTemplate[0] ?
+        CString(configuredInboxTemplate) : GetMailServerStringSetting64(
+            "MailInBoxDir", "C:\\mail\\inbox\\%USERNAME%");
     CString upperTemplate(inboxTemplate);
     upperTemplate.MakeUpper();
     int token = upperTemplate.Find("%USERNAME%");
@@ -228,7 +364,7 @@ static BOOL ResolveInboxFolder(LPCTSTR mailAddress, CString& folder, CString& de
             inboxTemplate.Mid(token + 10);
     }
 
-    for (int attempt = 0; attempt < 10; ++attempt) {
+    for (int attempt = 0; attempt < 60; ++attempt) {
         for (int i = 0; i < 4; ++i) {
             if (DirectoryExists(candidates[i])) {
                 folder = candidates[i];
@@ -298,7 +434,7 @@ public:
     CVerificationProgress() : m_created(FALSE) {}
     ~CVerificationProgress() { Close(); }
 
-    BOOL Create()
+    BOOL Create(BOOL includeMailboxProtocols)
     {
         CString className = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW,
             LoadCursor(NULL, IDC_WAIT), (HBRUSH)(COLOR_BTNFACE + 1), NULL);
@@ -312,8 +448,10 @@ public:
         int height = windowRect.Height();
         int x = (GetSystemMetrics(SM_CXSCREEN) - width) / 2;
         int y = (GetSystemMetrics(SM_CYSCREEN) - height) / 2;
-        if (!m_window.CreateEx(exStyle, className,
-            "EasyWiz - メールサーバーを確認しています",
+        CString progressTitle = includeMailboxProtocols ?
+            "EasyWiz2 - メールサーバーを確認しています" :
+            "EasyWiz2 - SMTPサーバーを確認しています";
+        if (!m_window.CreateEx(exStyle, className, progressTitle,
             style, x, y, width, height, NULL, 0))
             return FALSE;
 
@@ -491,10 +629,10 @@ static HRESULT AddFirewallRule(LPCTSTR name, long port)
     portText.Format("%ld", port);
     CComBSTR ruleName(name);
     CComBSTR ports(portText);
-    CComBSTR group(L"EasyWiz Mail Server");
+    CComBSTR group(L"EasyWiz2 Mail Server");
 
     rule->put_Name(ruleName);
-    rule->put_Description(CComBSTR(L"EasyWiz がメールサーバー設定時に作成した受信規則"));
+    rule->put_Description(CComBSTR(L"EasyWiz2がサーバー設定時に作成した受信規則"));
     rule->put_Protocol(NET_FW_IP_PROTOCOL_TCP);
     rule->put_LocalPorts(ports);
     rule->put_Direction(NET_FW_RULE_DIR_IN);
@@ -537,11 +675,20 @@ static BOOL RestartServiceForSettings(LPCTSTR serviceName, CString& detail)
             CloseServiceHandle(manager);
             return FALSE;
         }
-        for (int i = 0; i < 60; ++i) {
+        for (int i = 0; i < 120; ++i) {
             Sleep(500);
             if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
                 (LPBYTE)&status, sizeof(status), &needed)) break;
             if (status.dwCurrentState == SERVICE_STOPPED) break;
+        }
+        if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
+            (LPBYTE)&status, sizeof(status), &needed) ||
+            status.dwCurrentState != SERVICE_STOPPED) {
+            detail.Format("サービス %s の停止完了を確認できません（状態 %lu）",
+                serviceName, status.dwCurrentState);
+            CloseServiceHandle(service);
+            CloseServiceHandle(manager);
+            return FALSE;
         }
     }
 
@@ -554,7 +701,7 @@ static BOOL RestartServiceForSettings(LPCTSTR serviceName, CString& detail)
             CloseServiceHandle(manager);
             return FALSE;
         }
-        for (int i = 0; i < 30; ++i) {
+        for (int i = 0; i < 120; ++i) {
             Sleep(500);
             if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
                 (LPBYTE)&status, sizeof(status), &needed)) break;
@@ -564,7 +711,11 @@ static BOOL RestartServiceForSettings(LPCTSTR serviceName, CString& detail)
     }
     ok = QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
         (LPBYTE)&status, sizeof(status), &needed) && status.dwCurrentState == SERVICE_RUNNING;
-    detail = ok ? "設定を反映して再起動済み" : "再起動を確認できません";
+    if (ok)
+        detail = "設定を反映して再起動済み";
+    else
+        detail.Format("再起動を確認できません（状態 %lu、サービス終了コード %lu）",
+            status.dwCurrentState, status.dwWin32ExitCode);
     CloseServiceHandle(service);
     CloseServiceHandle(manager);
     return ok;
@@ -617,6 +768,85 @@ static BOOL SendSmtpCommand(SOCKET socketHandle, const CString& command, CString
     return ReceivePositiveReply(socketHandle, reply);
 }
 
+static BOOL SendSmtpData(SOCKET socketHandle, const CString& message, CString& reply)
+{
+    // DATA終端の「.」は本文ではなくSMTPプロトコル上の終端記号として送る。
+    CString wire = message + "\r\n.\r\n";
+    if (send(socketHandle, wire, wire.GetLength(), 0) != wire.GetLength()) {
+        reply = "メール本文の送信に失敗";
+        return FALSE;
+    }
+    return ReceivePositiveReply(socketHandle, reply);
+}
+
+static CString FormatRfc2822Date()
+{
+    static const char *weekdays[] = {
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    };
+    static const char *months[] = {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
+    SYSTEMTIME local = {0};
+    GetLocalTime(&local);
+    TIME_ZONE_INFORMATION zone = {0};
+    DWORD zoneState = GetTimeZoneInformation(&zone);
+    LONG bias = zone.Bias;
+    if (zoneState == TIME_ZONE_ID_DAYLIGHT)
+        bias += zone.DaylightBias;
+    else if (zoneState == TIME_ZONE_ID_STANDARD)
+        bias += zone.StandardBias;
+    LONG offset = -bias;
+    char sign = offset < 0 ? '-' : '+';
+    if (offset < 0) offset = -offset;
+    CString value;
+    value.Format("%s, %02u %s %04u %02u:%02u:%02u %c%02ld%02ld",
+        weekdays[local.wDayOfWeek], local.wDay,
+        months[local.wMonth - 1], local.wYear,
+        local.wHour, local.wMinute, local.wSecond,
+        sign, offset / 60, offset % 60);
+    return value;
+}
+
+static CString Base64Encode(LPCTSTR value)
+{
+    static const char alphabet[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    const unsigned char *source = (const unsigned char *)(value ? value : "");
+    int length = value ? strlen(value) : 0;
+    CString result;
+    for (int i = 0; i < length; i += 3) {
+        unsigned long block = ((unsigned long)source[i]) << 16;
+        int remaining = length - i;
+        if (remaining > 1) block |= ((unsigned long)source[i + 1]) << 8;
+        if (remaining > 2) block |= source[i + 2];
+        result += alphabet[(block >> 18) & 0x3f];
+        result += alphabet[(block >> 12) & 0x3f];
+        result += remaining > 1 ? alphabet[(block >> 6) & 0x3f] : '=';
+        result += remaining > 2 ? alphabet[block & 0x3f] : '=';
+    }
+    return result;
+}
+
+static CString Base64EncodeBytes(const unsigned char *source, int length)
+{
+    static const char alphabet[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    CString result;
+    for (int i = 0; i < length; i += 3) {
+        unsigned long block = ((unsigned long)source[i]) << 16;
+        int remaining = length - i;
+        if (remaining > 1) block |= ((unsigned long)source[i + 1]) << 8;
+        if (remaining > 2) block |= source[i + 2];
+        result += alphabet[(block >> 18) & 0x3f];
+        result += alphabet[(block >> 12) & 0x3f];
+        result += remaining > 1 ? alphabet[(block >> 6) & 0x3f] : '=';
+        result += remaining > 2 ? alphabet[block & 0x3f] : '=';
+    }
+    return result;
+}
+
 static BOOL ProbeProtocol(LPCTSTR address, u_short port, CString& detail)
 {
     SOCKET socketHandle = ConnectServer(address, port);
@@ -630,7 +860,7 @@ static BOOL ProbeProtocol(LPCTSTR address, u_short port, CString& detail)
 }
 
 static BOOL SendTestMail(LPCTSTR address, LPCTSTR recipient, CString& detail,
-    BOOL& recipientNotRegistered)
+    BOOL& recipientNotRegistered, LPCTSTR authUser, LPCTSTR authPassword)
 {
     recipientNotRegistered = FALSE;
     SOCKET socketHandle = ConnectServer(address, 25);
@@ -645,7 +875,46 @@ static BOOL SendTestMail(LPCTSTR address, LPCTSTR recipient, CString& detail,
     DWORD computerLength = MAX_COMPUTERNAME_LENGTH + 1;
     GetComputerName(computer, &computerLength);
 
-    if (ok) ok = SendSmtpCommand(socketHandle, CString("HELO ") + computer, reply);
+    if (ok) ok = SendSmtpCommand(socketHandle, CString("EHLO ") + computer, reply);
+    if (ok && authUser && authUser[0]) {
+        if (!authPassword || !authPassword[0]) {
+            detail = "SMTP認証パスワードが入力されていません";
+            closesocket(socketHandle);
+            return FALSE;
+        }
+        // Windows/ADアカウント連携では、E-POSTへ RFC 4616 の
+        // AUTH PLAIN（authzid省略）で完全なメールアドレスとパスワードを渡す。
+        int userLength = strlen(authUser);
+        int passwordLength = strlen(authPassword);
+        int plainLength = 1 + userLength + 1 + passwordLength;
+        unsigned char *plain = new unsigned char[plainLength];
+        plain[0] = 0;
+        memcpy(plain + 1, authUser, userLength);
+        plain[1 + userLength] = 0;
+        memcpy(plain + 1 + userLength + 1, authPassword, passwordLength);
+        CString encodedPlain = Base64EncodeBytes(plain, plainLength);
+        SecureZeroMemory(plain, plainLength);
+        delete [] plain;
+
+        ok = SendSmtpCommand(socketHandle,
+            CString("AUTH PLAIN ") + encodedPlain, reply);
+        // サーバーが初期応答を別行で要求する実装にも対応する。
+        if (ok && reply.Left(3) == "334")
+            ok = SendSmtpCommand(socketHandle, encodedPlain, reply);
+        if (!encodedPlain.IsEmpty()) {
+            LPTSTR secret = encodedPlain.GetBuffer(encodedPlain.GetLength());
+            SecureZeroMemory(secret, encodedPlain.GetLength());
+            encodedPlain.ReleaseBuffer(0);
+        }
+        if (!ok) {
+            detail.Format("SMTP認証エラー（PLAIN、認証ID: %s）: %s",
+                authUser, (LPCTSTR)reply);
+            CString ignored;
+            SendSmtpCommand(socketHandle, "QUIT", ignored);
+            closesocket(socketHandle);
+            return FALSE;
+        }
+    }
     BOOL usedEmptyReturnPath = FALSE;
     if (ok) {
         // 通常は管理者アドレスを送信元にする。旧版E-POSTがローカルアカウント
@@ -673,12 +942,19 @@ static BOOL SendTestMail(LPCTSTR address, LPCTSTR recipient, CString& detail,
     if (ok) ok = SendSmtpCommand(socketHandle, "DATA", reply);
     if (ok) {
         CString message;
+        CString sentDate = FormatRfc2822Date();
         message.Format(
-            "From: EasyWiz <%s>\r\nTo: <%s>\r\nSubject: EasyWiz mail server test\r\n"
-            "Date: test\r\nX-Mailer: EasyWiz\r\n\r\n"
-            "SMTP setup completed successfully.\r\nThis is an automatic test message.\r\n.",
-            recipient, recipient);
-        ok = SendSmtpCommand(socketHandle, message, reply);
+            "From: EasyWiz2 <%s>\r\nTo: <%s>\r\nSubject: EasyWiz2 mail server test\r\n"
+            "Date: %s\r\nMIME-Version: 1.0\r\n"
+            "Content-Type: text/plain; charset=us-ascii\r\n"
+            "Content-Transfer-Encoding: 7bit\r\nX-Mailer: EasyWiz2\r\n\r\n"
+            "EasyWiz2 successfully completed the mail server self-delivery test.\r\n\r\n"
+            "Test account: %s\r\n"
+            "Test time: %s\r\n\r\n"
+            "No action is required.\r\n",
+            recipient, recipient, (LPCTSTR)sentDate,
+            recipient, (LPCTSTR)sentDate);
+        ok = SendSmtpData(socketHandle, message, reply);
     }
     CString ignored;
     SendSmtpCommand(socketHandle, "QUIT", ignored);
@@ -706,17 +982,61 @@ static void AppendSkipped(CString& report, LPCTSTR label, const CString& detail)
     report += line;
 }
 
-CString RunMailServerVerification(LPCTSTR serverAddress, LPCTSTR testAddress, BOOL includeMailboxProtocols)
+CString RunMailServerVerification(LPCTSTR serverAddress, LPCTSTR testAddress,
+    BOOL includeMailboxProtocols, int accountManagementMode,
+    LPCTSTR smtpAuthUser, LPCTSTR smtpAuthPassword,
+    LPCTSTR activeDirectoryName, LPCTSTR activeDirectoryMailGroup,
+    LPCTSTR configuredInboxTemplate)
 {
     CString managerDetail;
-    BOOL managerRan = RunAccountManagerImport(testAddress, managerDetail);
+    BOOL managerRan = FALSE;
     CVerificationProgress progress;
-    progress.Create();
-    CString report = "メールサーバ・SMTPサーバ 設定結果\r\n\r\n";
-    if (managerRan)
-        AppendResult(report, "管理者アカウント登録", TRUE, managerDetail);
-    else
-        AppendSkipped(report, "管理者アカウント登録", managerDetail);
+    progress.Create(includeMailboxProtocols);
+    CString report = includeMailboxProtocols ?
+        "メールサーバー 設定結果\r\n\r\n" :
+        "SMTPサーバー 設定結果\r\n\r\n";
+    if (accountManagementMode == 1) {
+        if (testAddress && testAddress[0]) {
+            CString accountDetail;
+            accountDetail.Format("SMTPで登録状態を確認します: %s", testAddress);
+            AppendResult(report, "Windowsアカウント確認", TRUE, accountDetail);
+        } else {
+            AppendSkipped(report, "Windowsアカウント確認",
+                "選択グループにSMTP確認に使用できる英数字のローカルユーザーがいません");
+        }
+    }
+    BOOL adAccountReady = TRUE;
+    CString resolvedAdLogonId;
+    if (accountManagementMode == 2) {
+        CString accountDetail;
+        adAccountReady = ValidateAdAccount(smtpAuthUser, smtpAuthPassword,
+            activeDirectoryName, activeDirectoryMailGroup,
+            resolvedAdLogonId, accountDetail);
+        AppendResult(report, "ADアカウント事前確認", adAccountReady, accountDetail);
+        CString authSetting;
+        CString windowsDomain = resolvedAdLogonId;
+        int domainSeparator = windowsDomain.Find('\\');
+        if (domainSeparator > 0) windowsDomain = windowsDomain.Left(domainSeparator);
+        authSetting.Format("ADアカウント参照を使用（AD参照: %s、ローカル宛自己送受信はSMTP AUTHなし）",
+            (LPCTSTR)windowsDomain);
+        AppendResult(report, "SMTP認証設定", TRUE, authSetting);
+    }
+    if (accountManagementMode == 0) {
+        managerRan = RunAccountManagerImport(testAddress, NULL, FALSE, managerDetail);
+        if (managerRan)
+            AppendResult(report, "管理者アカウント登録", TRUE, managerDetail);
+        else
+            AppendSkipped(report, "管理者アカウント登録", managerDetail);
+    } else if (accountManagementMode == 2 && adAccountReady) {
+        AppendSkipped(report, "Managerインポート",
+            "AD連携は既存ADアカウントの自己送受信で確認するため不要です");
+    } else if (accountManagementMode == 1) {
+        AppendSkipped(report, "Managerインポート",
+            "Windows Serverローカルアカウント連携のため、Managerインポートは不要です");
+    } else {
+        AppendSkipped(report, "Managerインポート",
+            "ADアカウント事前確認に失敗しましたが、AD連携では使用しません");
+    }
     HRESULT initResult = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     BOOL uninitialize = SUCCEEDED(initResult);
     CString inboxFolderToOpen;
@@ -741,9 +1061,9 @@ CString RunMailServerVerification(LPCTSTR serverAddress, LPCTSTR testAddress, BO
     AppendResult(report, "x64ドメイン設定", productSync, detail);
 
     struct FirewallPort { LPCTSTR name; long port; } ports[] = {
-        { _T("EasyWiz SMTP (TCP 25)"), 25 },
-        { _T("EasyWiz POP3 (TCP 110)"), 110 },
-        { _T("EasyWiz IMAP (TCP 143)"), 143 }
+        { _T("EasyWiz2 SMTP (TCP 25)"), 25 },
+        { _T("EasyWiz2 POP3 (TCP 110)"), 110 },
+        { _T("EasyWiz2 IMAP (TCP 143)"), 143 }
     };
     int firewallCount = includeMailboxProtocols ? 3 : 1;
     progress.SetStatus("Windows Firewall を設定しています...");
@@ -781,22 +1101,38 @@ CString RunMailServerVerification(LPCTSTR serverAddress, LPCTSTR testAddress, BO
             AppendResult(report, "IMAP疎通", imap, detail);
         }
         // 挨拶確認がタイムアウトしても、別接続でテストメール送信を試す。
-        progress.SetStatus("テストメールを送信しています（最大30秒）...");
-        BOOL recipientNotRegistered = FALSE;
-        BOOL mail = SendTestMail(serverAddress, testAddress, detail,
-            recipientNotRegistered);
-        if (recipientNotRegistered) {
+        if (!smtpReceiver) {
+            AppendSkipped(report, "テストメール",
+                "SMTP受信サービスの再起動を確認できないため送信していません");
+        } else if (!testAddress || !testAddress[0]) {
+            AppendSkipped(report, "テストメール",
+                "送信対象のWindowsローカルユーザーを取得できないため送信していません");
+        } else if (accountManagementMode == 2 && !adAccountReady) {
+            AppendSkipped(report, "テストメール",
+                "AD資格情報またはメールグループ所属を確認できないため送信していません");
+        } else {
+          progress.SetStatus("テストメールを送信しています（最大30秒）...");
+          BOOL recipientNotRegistered = FALSE;
+          // AD連携は既存UPNの自己送受信をローカル配送として確認する。
+          // AD資格情報はWindowsで事前確認済みのためSMTP AUTHは行わない。
+          LPCTSTR smtpLoginId = smtpAuthUser;
+          if (accountManagementMode == 2)
+              smtpLoginId = NULL;
+          BOOL mail = SendTestMail(serverAddress, testAddress, detail,
+              recipientNotRegistered, smtpLoginId, smtpAuthPassword);
+          if (recipientNotRegistered) {
             CString skipped;
             skipped.Format("%s は未登録のため送信していません", testAddress);
             AppendSkipped(report, "テストメール", skipped);
-        } else {
+          } else {
             AppendResult(report, "テストメール", mail, detail);
             if (mail) {
                 progress.SetStatus("テストメールの受信フォルダを確認しています...");
                 BOOL inboxFound = ResolveInboxFolder(testAddress,
-                    inboxFolderToOpen, detail);
+                    configuredInboxTemplate, inboxFolderToOpen, detail);
                 AppendResult(report, "受信フォルダ", inboxFound, detail);
             }
+          }
         }
         WSACleanup();
     } else {

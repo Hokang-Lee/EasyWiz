@@ -3,7 +3,11 @@
 
 // Windows Firewall、メールサービス起動、プロトコル疎通、テストメールを
 // 一括して実行し、情シス担当者向けの日本語レポートを返す。
-CString RunMailServerVerification(LPCTSTR serverAddress, LPCTSTR testAddress, BOOL includeMailboxProtocols);
+CString RunMailServerVerification(LPCTSTR serverAddress, LPCTSTR testAddress,
+    BOOL includeMailboxProtocols, int accountManagementMode,
+    LPCTSTR smtpAuthUser, LPCTSTR smtpAuthPassword,
+    LPCTSTR activeDirectoryName, LPCTSTR activeDirectoryMailGroup,
+    LPCTSTR configuredInboxTemplate);
 CString GetPrimaryIPv4Address();
 CString GenerateRandomMailAddress(LPCTSTR domainName);
 DWORD GetMailServerDwordSetting64(LPCTSTR valueName, DWORD defaultValue);

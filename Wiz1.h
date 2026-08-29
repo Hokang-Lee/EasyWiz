@@ -32,12 +32,14 @@ public:
 	public:
 	virtual LRESULT OnWizardNext();
 	virtual BOOL OnSetActive();
+	virtual BOOL OnInitDialog();
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV サポート
 	//}}AFX_VIRTUAL
 
 // インプリメンテーション
 protected:
+	CFont m_boldNoticeFont;
 	// 生成されたメッセージ マップ関数
 	//{{AFX_MSG(CWiz1)
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);

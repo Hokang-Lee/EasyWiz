@@ -17,6 +17,8 @@ class CWiz12 : public CPropertyPage
 // コンストラクション
 public:
 	void GetLocalGroupList(void);
+	void GetAdUserList(void);
+	void PopulateAdDomainList(void);
 	CWiz12();
 	~CWiz12();
 
@@ -25,6 +27,8 @@ public:
 	enum { IDD = IDD_EASYWIZ_DIALOG12 };
 	CString	m_LocalGroup;
 	CString	m_PDC;
+	CString	m_ADUser;
+	CString	m_ADPassword;
 	//}}AFX_DATA
 
 
@@ -47,6 +51,8 @@ protected:
 	afx_msg void OnDropdownComboLocalgroup();
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 	afx_msg void OnKillfocusEditAdname();
+	afx_msg void OnDropdownAdname();
+	afx_msg void OnDropdownAduser();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

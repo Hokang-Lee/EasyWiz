@@ -87,7 +87,7 @@ void CWiz4::OnShowWindow(BOOL bShow, UINT nStatus)
       UpdateData(TRUE);
 	  CPropertySheet* pSheet = (CPropertySheet*)GetParent();
       CString m, ms;
-      m.LoadString( IDS_STRING112 );
+      m = GetWizardTitleFormat();
 	  CHAR mTitle[128];
       sprintf(mTitle, m, "4");
 	  pSheet->SetTitle(mTitle, 0);
@@ -96,3 +96,4 @@ void CWiz4::OnShowWindow(BOOL bShow, UINT nStatus)
 	}
 	
 }
+

@@ -79,15 +79,24 @@ BOOL CWiz5::OnSetActive()
 
 BOOL CWiz5::OnWizardFinish()
 {
-	if (AfxMessageBox("表示されている内容で設定を保存します。\n既存の設定は上書きされます。続行しますか？",
+	if (AfxMessageBox("表示されている内容で設定を保存します。\n既存の設定は上書きされます。\nManager.exeが実行中の場合は終了します。続行しますか？",
 		MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
 		return FALSE;
+	CString managerCloseDetail;
+	if (!CloseRunningManagerProcesses(managerCloseDetail)) {
+		AfxMessageBox(managerCloseDetail, MB_OK | MB_ICONSTOP);
+		return FALSE;
+	}
 	return CPropertyPage::OnWizardFinish();
 }
 
 BOOL CWiz5::OnInitDialog() 
 {
 	CPropertyPage::OnInitDialog();
+	CString finalGuidance;
+	finalGuidance.Format("内容が正しければ、「完了」ボタンを押すと%sの基本設定は終了です。\r\nサービス開始は、E-Post Mail Control の「サービス制御」タブ画面から行ってください。\r\nアカウント登録は、E-Post Account Manager から行ってください。",
+		(LPCTSTR)GetProductDisplayName());
+	GetDlgItem(IDC_STATIC_S5)->SetWindowText(finalGuidance);
 	
 	// TODO: この位置に初期化の補足処理を追加してください
     UpdateData(TRUE);
@@ -146,7 +155,7 @@ void CWiz5::OnShowWindow(BOOL bShow, UINT nStatus)
       UpdateData(TRUE);
 	  CPropertySheet* pSheet = (CPropertySheet*)GetParent();
       CString m, ms;
-      m.LoadString( IDS_STRING112 );
+      m = GetWizardTitleFormat();
 	  CHAR mTitle[128];
 #ifdef LGWAN
 #ifdef REGTOFILE

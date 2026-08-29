@@ -97,6 +97,28 @@ BOOL CWiz1::OnSetActive()
 	return CPropertyPage::OnSetActive();
 }
 
+BOOL CWiz1::OnInitDialog()
+{
+	CPropertyPage::OnInitDialog();
+	CString intro;
+	intro.Format("%sの設定をナビゲートします。", (LPCTSTR)GetProductDisplayName());
+	GetDlgItem(IDC_STATIC_PRODUCT_INTRO)->SetWindowText(intro);
+	CString firewallNotice = IsMailServerProduct() ?
+		"なお、このウィザードを完了すると、Windows Serverのファイアウォール設定で、SMTP・POP3・IMAPが使用するPortの許可設定が自動的に行われます。ご留意ください。" :
+		"なお、このウィザードを完了すると、Windows Serverのファイアウォール設定で、SMTPが使用するPortの許可設定が自動的に行われます。POP3・IMAPの許可設定は行いません。ご留意ください。";
+	CWnd *notice = GetDlgItem(IDC_STATIC_FIREWALL_NOTICE);
+	notice->SetWindowText(firewallNotice);
+	LOGFONT logFont;
+	ZeroMemory(&logFont, sizeof(logFont));
+	CFont *currentFont = notice->GetFont();
+	if (currentFont && currentFont->GetLogFont(&logFont)) {
+		logFont.lfWeight = FW_BOLD;
+		m_boldNoticeFont.CreateFontIndirect(&logFont);
+		notice->SetFont(&m_boldNoticeFont);
+	}
+	return TRUE;
+}
+
 void CWiz1::OnShowWindow(BOOL bShow, UINT nStatus) 
 {
 	CPropertyPage::OnShowWindow(bShow, nStatus);
@@ -106,7 +128,7 @@ void CWiz1::OnShowWindow(BOOL bShow, UINT nStatus)
       UpdateData(TRUE);
 	  CPropertySheet* pSheet = (CPropertySheet*)GetParent();
       CString m, ms;
-      m.LoadString( IDS_STRING112 );
+      m = GetWizardTitleFormat();
 	  CHAR mTitle[128];
       sprintf(mTitle, m, "1");
 	  pSheet->SetTitle(mTitle, 0);

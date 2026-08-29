@@ -12,6 +12,9 @@
 #include "Wiz4.h"
 #include "Wiz5.h"
 #include "NetworkSetup.h"
+#include <tlhelp32.h>
+#include <lmcons.h>
+#include <lm.h>
 #ifdef LGWAN
 #include "Wiz6.h"
 #include "Wiz7.h"
@@ -30,6 +33,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 int mSel;
+CString g_AdSelectedDnsDomain;
 CString mWiz1List;
 CString mWiz11List;
 CString mWiz12List;
@@ -40,6 +44,468 @@ CString mWiz5List;
 CString mWiz6List;
 CString mWiz7List;
 CString mWiz8List;
+
+static BOOL g_IsMailServerProduct = FALSE;
+
+static CString GetJoinedWindowsDomainName()
+{
+  LPWSTR joinedName = NULL;
+  NETSETUP_JOIN_STATUS joinStatus = NetSetupUnknownStatus;
+  CString result;
+  if (NetGetJoinInformation(NULL, &joinedName, &joinStatus) == NERR_Success &&
+      joinStatus == NetSetupDomainName && joinedName && joinedName[0]) {
+    CHAR domain[256] = {0};
+    WideCharToMultiByte(CP_ACP, 0, joinedName, -1,
+      domain, sizeof(domain), NULL, NULL);
+    result = domain;
+  }
+  if (joinedName) NetApiBufferFree(joinedName);
+  return result;
+}
+
+static BOOL IsSmtpSafeAccountName(LPCTSTR account)
+{
+   if (!account || !account[0])
+      return FALSE;
+   for (LPCTSTR p = account; *p; ++p) {
+      unsigned char c = (unsigned char)*p;
+      if (!(isalnum(c) || c == '.' || c == '_' || c == '-'))
+         return FALSE;
+   }
+   return TRUE;
+}
+
+static BOOL EnsureWindowsMailGroup(LPCTSTR groupName, LPCTSTR accountName,
+   CString& detail)
+{
+   if (!groupName || !groupName[0] || !accountName || !accountName[0]) {
+      detail = "ドメイン名またはWindowsユーザー名が空です";
+      return FALSE;
+   }
+   WCHAR wideGroup[256] = {0};
+   WCHAR wideAccount[UNLEN + 1] = {0};
+   MultiByteToWideChar(CP_ACP, 0, groupName, -1, wideGroup, 256);
+   MultiByteToWideChar(CP_ACP, 0, accountName, -1, wideAccount, UNLEN + 1);
+
+   LPBYTE groupInfo = NULL;
+   NET_API_STATUS status = NetLocalGroupGetInfo(NULL, wideGroup, 1, &groupInfo);
+   BOOL created = FALSE;
+   if (status == NERR_GroupNotFound) {
+      LOCALGROUP_INFO_1 newGroup = {0};
+      newGroup.lgrpi1_name = wideGroup;
+      newGroup.lgrpi1_comment = L"E-POST mail domain users";
+      DWORD parameterError = 0;
+      status = NetLocalGroupAdd(NULL, 1, (LPBYTE)&newGroup, &parameterError);
+      if (status != NERR_Success && status != NERR_GroupExists) {
+         detail.Format("ローカルグループ %s を作成できません (%lu)",
+            groupName, status);
+         return FALSE;
+      }
+      created = TRUE;
+   } else if (status != NERR_Success) {
+      if (groupInfo) NetApiBufferFree(groupInfo);
+      detail.Format("ローカルグループ %s を確認できません (%lu)",
+         groupName, status);
+      return FALSE;
+   }
+   if (groupInfo) NetApiBufferFree(groupInfo);
+
+   BOOL memberExists = FALSE;
+   DWORD resume = 0;
+   NET_API_STATUS enumStatus;
+   do {
+      LPLOCALGROUP_MEMBERS_INFO_1 members = NULL;
+      DWORD read = 0, total = 0;
+      enumStatus = NetLocalGroupGetMembers(NULL, wideGroup, 1,
+         (LPBYTE *)&members, MAX_PREFERRED_LENGTH, &read, &total, &resume);
+      if (enumStatus == NERR_Success || enumStatus == ERROR_MORE_DATA) {
+         for (DWORD i = 0; i < read; ++i) {
+            if (members[i].lgrmi1_sidusage != SidTypeUser ||
+                !members[i].lgrmi1_name)
+               continue;
+            WCHAR *memberName = wcsrchr(members[i].lgrmi1_name, L'\\');
+            memberName = memberName ? memberName + 1 : members[i].lgrmi1_name;
+            if (_wcsicmp(memberName, wideAccount) == 0) {
+               memberExists = TRUE;
+               break;
+            }
+         }
+      }
+      if (members) NetApiBufferFree(members);
+   } while (!memberExists && enumStatus == ERROR_MORE_DATA);
+
+   if (memberExists) {
+      detail.Format("グループ %s とユーザー %s は登録済みのため、既存設定を再利用しました",
+         groupName, accountName);
+      return TRUE;
+   }
+
+   LOCALGROUP_MEMBERS_INFO_3 member = {0};
+   member.lgrmi3_domainandname = wideAccount;
+   status = NetLocalGroupAddMembers(NULL, wideGroup, 3, (LPBYTE)&member, 1);
+   if (status != NERR_Success && status != ERROR_MEMBER_IN_ALIAS) {
+      detail.Format("ユーザー %s をグループ %s に追加できません (%lu)",
+         accountName, groupName, status);
+      return FALSE;
+   }
+   if (created)
+      detail.Format("グループ %s を作成し、ユーザー %s を追加しました",
+         groupName, accountName);
+   else if (status == ERROR_MEMBER_IN_ALIAS)
+      detail.Format("グループ %s にユーザー %s は登録済みのため、既存設定を再利用しました",
+         groupName, accountName);
+   else
+      detail.Format("グループ %s にユーザー %s を追加しました",
+         groupName, accountName);
+   return TRUE;
+}
+
+static CString GetLocalGroupTestAccount(LPCTSTR groupName)
+{
+   // The local-account page may leave the group text empty when the standard
+   // Users group is selected.  Use that group explicitly so that SMTP
+   // verification never falls back to the randomly generated Soft Account.
+   LPCTSTR effectiveGroup = (groupName && groupName[0]) ? groupName : _T("Users");
+   WCHAR wideGroup[256] = {0};
+   MultiByteToWideChar(CP_ACP, 0, effectiveGroup, -1, wideGroup, 256);
+   LPBYTE buffer = NULL;
+   DWORD read = 0, total = 0, resume = 0;
+   NET_API_STATUS status = NetLocalGroupGetMembers(NULL, wideGroup, 1,
+      &buffer, MAX_PREFERRED_LENGTH, &read, &total, &resume);
+   CString result;
+   if (status == NERR_Success || status == ERROR_MORE_DATA) {
+      LOCALGROUP_MEMBERS_INFO_1 *members =
+         (LOCALGROUP_MEMBERS_INFO_1 *)buffer;
+      for (DWORD i = 0; i < read; ++i) {
+         if (members[i].lgrmi1_sidusage != SidTypeUser ||
+             !members[i].lgrmi1_name)
+            continue;
+         CHAR account[UNLEN + 1] = {0};
+         WideCharToMultiByte(CP_ACP, 0, members[i].lgrmi1_name, -1,
+            account, sizeof(account), NULL, NULL);
+         CHAR *separator = strrchr(account, '\\');
+         LPCTSTR localName = separator ? separator + 1 : account;
+         if (IsSmtpSafeAccountName(localName)) {
+            result = localName;
+            break;
+         }
+      }
+   }
+   if (buffer)
+      NetApiBufferFree(buffer);
+   if (result.IsEmpty() && _stricmp((LPCTSTR)effectiveGroup, "Users") != 0)
+      return GetLocalGroupTestAccount(_T("Users"));
+   return result;
+}
+
+static BOOL DetectMailServerProduct()
+{
+   CHAR modulePath[MAX_PATH] = {0};
+   if (!GetModuleFileName(NULL, modulePath, MAX_PATH))
+      return FALSE;
+   CHAR *slash = strrchr(modulePath, '\\');
+   if (slash)
+      strcpy(slash + 1, "Epstpop3s.exe");
+   else
+      strcpy(modulePath, "Epstpop3s.exe");
+   DWORD attributes = GetFileAttributes(modulePath);
+   return attributes != INVALID_FILE_ATTRIBUTES &&
+      !(attributes & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+BOOL IsMailServerProduct()
+{
+   return g_IsMailServerProduct;
+}
+
+CString GetProductDisplayName()
+{
+   return g_IsMailServerProduct ? "メールサーバー" : "SMTPサーバー";
+}
+
+CString GetWizardTitleFormat()
+{
+   CString title;
+   title.Format("EasyWiz2 - %s設定（ステップ %%s / 7）",
+      (LPCTSTR)GetProductDisplayName());
+   return title;
+}
+
+static BOOL CALLBACK CloseManagerWindowProc(HWND window, LPARAM processId)
+{
+   DWORD windowProcessId = 0;
+   GetWindowThreadProcessId(window, &windowProcessId);
+   if (windowProcessId == (DWORD)processId)
+      PostMessage(window, WM_CLOSE, 0, 0);
+   return TRUE;
+}
+
+BOOL CloseRunningManagerProcesses(CString& detail)
+{
+   CHAR modulePath[MAX_PATH] = {0};
+   if (!GetModuleFileName(NULL, modulePath, MAX_PATH)) {
+      detail = "Manager.exeの場所を取得できませんでした。";
+      return FALSE;
+   }
+   CHAR *separator = strrchr(modulePath, '\\');
+   if (separator)
+      strcpy(separator + 1, "Manager.exe");
+   else
+      strcpy(modulePath, "Manager.exe");
+
+   HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+   if (snapshot == INVALID_HANDLE_VALUE) {
+      detail.Format("実行プロセスを確認できませんでした（エラー %lu）。",
+         GetLastError());
+      return FALSE;
+   }
+
+   PROCESSENTRY32 entry;
+   ZeroMemory(&entry, sizeof(entry));
+   entry.dwSize = sizeof(entry);
+   int closedCount = 0;
+   BOOL allClosed = TRUE;
+   if (Process32First(snapshot, &entry)) {
+      do {
+         if (_stricmp(entry.szExeFile, "Manager.exe") != 0)
+            continue;
+         HANDLE process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION |
+            SYNCHRONIZE | PROCESS_TERMINATE, FALSE, entry.th32ProcessID);
+         if (!process)
+            continue;
+
+         CHAR processPath[MAX_PATH] = {0};
+         DWORD pathLength = MAX_PATH;
+         BOOL isEasyWizManager = QueryFullProcessImageName(process, 0,
+            processPath, &pathLength) &&
+            _stricmp(processPath, modulePath) == 0;
+         if (!isEasyWizManager) {
+            CloseHandle(process);
+            continue;
+         }
+
+         EnumWindows(CloseManagerWindowProc, (LPARAM)entry.th32ProcessID);
+         DWORD waitResult = WaitForSingleObject(process, 5000);
+         if (waitResult == WAIT_TIMEOUT) {
+            if (!TerminateProcess(process, 0) ||
+                WaitForSingleObject(process, 3000) != WAIT_OBJECT_0)
+               allClosed = FALSE;
+         } else if (waitResult != WAIT_OBJECT_0) {
+            allClosed = FALSE;
+         }
+         if (allClosed)
+            ++closedCount;
+         CloseHandle(process);
+      } while (Process32Next(snapshot, &entry));
+   }
+   CloseHandle(snapshot);
+
+   if (!allClosed) {
+      detail = "Manager.exeを終了できませんでした。手動で終了してから、もう一度［完了］を押してください。";
+      return FALSE;
+   }
+   if (closedCount > 0)
+      detail.Format("実行中のManager.exeを終了しました（%d件）。", closedCount);
+   else
+      detail = "Manager.exeは実行されていません。";
+   return TRUE;
+}
+
+static BOOL SaveVerificationEvidence(const CString& verification,
+                                     CString& savedPath, CString& errorDetail)
+{
+   CHAR modulePath[MAX_PATH] = {0};
+   if (!GetModuleFileName(NULL, modulePath, MAX_PATH)) {
+      errorDetail = "実行ファイルの場所を取得できませんでした。";
+      return FALSE;
+   }
+   CHAR *slash = strrchr(modulePath, '\\');
+   if (!slash) {
+      errorDetail = "ログ保存先を決定できませんでした。";
+      return FALSE;
+   }
+   *slash = '\0';
+
+   CString logDirectory;
+   logDirectory.Format("%s\\EasyWiz2-Logs", modulePath);
+   if (!CreateDirectory(logDirectory, NULL) &&
+       GetLastError() != ERROR_ALREADY_EXISTS) {
+      errorDetail.Format("ログフォルダーを作成できませんでした（エラー %lu）。",
+         GetLastError());
+      return FALSE;
+   }
+
+   SYSTEMTIME now;
+   GetLocalTime(&now);
+   CString productCode = IsMailServerProduct() ? "MailServer" : "SMTPServer";
+   savedPath.Format("%s\\EasyWiz2-%s-%04d%02d%02d-%02d%02d%02d-%03d.txt",
+      (LPCTSTR)logDirectory, (LPCTSTR)productCode,
+      now.wYear, now.wMonth, now.wDay,
+      now.wHour, now.wMinute, now.wSecond, now.wMilliseconds);
+
+   CHAR computerName[MAX_COMPUTERNAME_LENGTH + 1] = {0};
+   DWORD computerLength = MAX_COMPUTERNAME_LENGTH + 1;
+   if (!GetComputerName(computerName, &computerLength))
+      strcpy(computerName, "unknown");
+   CHAR userName[256] = {0};
+   DWORD userLength = sizeof(userName);
+   if (!GetUserName(userName, &userLength))
+      strcpy(userName, "取得できませんでした");
+
+   CString evidence;
+   evidence.Format(
+      "EasyWiz2 設定実行証跡\r\n"
+      "========================================\r\n"
+      "実行日時: %04d/%02d/%02d %02d:%02d:%02d.%03d\r\n"
+      "コンピューター名: %s\r\n"
+      "実行ユーザー: %s\r\n"
+      "製品種別: %s\r\n"
+      "操作記録: ユーザーがウィザードの［完了］を選択した後、設定処理を実行しました。\r\n"
+      "========================================\r\n\r\n%s",
+      now.wYear, now.wMonth, now.wDay,
+      now.wHour, now.wMinute, now.wSecond, now.wMilliseconds,
+      computerName, userName, (LPCTSTR)GetProductDisplayName(),
+      (LPCTSTR)verification);
+
+   HANDLE file = CreateFile(savedPath, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+      CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+   if (file == INVALID_HANDLE_VALUE) {
+      errorDetail.Format("ログファイルを作成できませんでした（エラー %lu）。",
+         GetLastError());
+      return FALSE;
+   }
+
+   int wideLength = MultiByteToWideChar(CP_ACP, 0, evidence, -1, NULL, 0);
+   WCHAR *wideText = new WCHAR[wideLength];
+   MultiByteToWideChar(CP_ACP, 0, evidence, -1, wideText, wideLength);
+   int utf8Length = WideCharToMultiByte(CP_UTF8, 0, wideText, wideLength - 1,
+      NULL, 0, NULL, NULL);
+   CHAR *utf8Text = new CHAR[utf8Length];
+   WideCharToMultiByte(CP_UTF8, 0, wideText, wideLength - 1,
+      utf8Text, utf8Length, NULL, NULL);
+   delete [] wideText;
+
+   const BYTE bom[] = {0xEF, 0xBB, 0xBF};
+   DWORD written = 0;
+   BOOL success = WriteFile(file, bom, sizeof(bom), &written, NULL) &&
+      written == sizeof(bom) &&
+      WriteFile(file, utf8Text, utf8Length, &written, NULL) &&
+      written == (DWORD)utf8Length;
+   delete [] utf8Text;
+   CloseHandle(file);
+   if (!success) {
+      errorDetail = "ログファイルへの書き込みを完了できませんでした。";
+      return FALSE;
+   }
+   return TRUE;
+}
+
+struct CSelectableResultWindowData
+{
+   CString text;
+   HWND edit;
+};
+
+static LRESULT CALLBACK SelectableResultWindowProc(HWND hwnd, UINT message,
+                                                   WPARAM wParam, LPARAM lParam)
+{
+   CSelectableResultWindowData *data =
+      (CSelectableResultWindowData *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+   if (message == WM_CREATE) {
+      CREATESTRUCT *create = (CREATESTRUCT *)lParam;
+      data = (CSelectableResultWindowData *)create->lpCreateParams;
+      SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)data);
+
+      data->edit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", data->text,
+         WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL |
+         ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
+         18, 18, 640, 430, hwnd, (HMENU)1001, AfxGetInstanceHandle(), NULL);
+      HWND ok = CreateWindow("BUTTON", "OK",
+         WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON,
+         560, 465, 98, 30, hwnd, (HMENU)IDOK, AfxGetInstanceHandle(), NULL);
+      HFONT font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+      SendMessage(data->edit, WM_SETFONT, (WPARAM)font, TRUE);
+      SendMessage(ok, WM_SETFONT, (WPARAM)font, TRUE);
+      SetFocus(data->edit);
+      return 0;
+   }
+
+   if (message == WM_SIZE && data) {
+      int width = LOWORD(lParam);
+      int height = HIWORD(lParam);
+      MoveWindow(data->edit, 18, 18, width - 36, height - 76, TRUE);
+      HWND ok = GetDlgItem(hwnd, IDOK);
+      MoveWindow(ok, width - 116, height - 48, 98, 30, TRUE);
+      return 0;
+   }
+
+   if (message == WM_COMMAND && LOWORD(wParam) == IDOK) {
+      DestroyWindow(hwnd);
+      return 0;
+   }
+   if (message == WM_CLOSE) {
+      DestroyWindow(hwnd);
+      return 0;
+   }
+   return DefWindowProc(hwnd, message, wParam, lParam);
+}
+
+static void ShowSelectableResultWindow(LPCTSTR title, LPCTSTR text)
+{
+   static LPCTSTR className = "EasyWiz2SelectableResultWindow";
+   static BOOL registered = FALSE;
+   if (!registered) {
+      WNDCLASS wc;
+      ZeroMemory(&wc, sizeof(wc));
+      wc.lpfnWndProc = SelectableResultWindowProc;
+      wc.hInstance = AfxGetInstanceHandle();
+      wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+      wc.hIcon = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME));
+      wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+      wc.lpszClassName = className;
+      registered = RegisterClass(&wc) != 0;
+   }
+
+   CSelectableResultWindowData data;
+   data.text = text;
+   data.edit = NULL;
+   HWND owner = GetActiveWindow();
+   HWND hwnd = CreateWindowEx(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, className, title,
+      WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME,
+      CW_USEDEFAULT, CW_USEDEFAULT, 700, 560, owner, NULL,
+      AfxGetInstanceHandle(), &data);
+   if (!hwnd) {
+      MessageBox(owner, text, title, MB_OK | MB_ICONINFORMATION);
+      return;
+   }
+
+   RECT windowRect;
+   RECT workArea;
+   GetWindowRect(hwnd, &windowRect);
+   SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+   int x = workArea.left + ((workArea.right - workArea.left) -
+      (windowRect.right - windowRect.left)) / 2;
+   int y = workArea.top + ((workArea.bottom - workArea.top) -
+      (windowRect.bottom - windowRect.top)) / 2;
+   SetWindowPos(hwnd, HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE);
+   if (owner)
+      EnableWindow(owner, FALSE);
+   ShowWindow(hwnd, SW_SHOW);
+   UpdateWindow(hwnd);
+
+   MSG msg;
+   while (IsWindow(hwnd) && GetMessage(&msg, NULL, 0, 0) > 0) {
+      if (!IsDialogMessage(hwnd, &msg)) {
+         TranslateMessage(&msg);
+         DispatchMessage(&msg);
+      }
+   }
+   if (owner) {
+      EnableWindow(owner, TRUE);
+      SetActiveWindow(owner);
+   }
+}
 
 #ifdef REGTOFILE
 BOOL    nClustering;
@@ -104,6 +570,7 @@ BOOL CEasyWizApp::InitInstance()
 
 void CEasyWizApp::StartSheet()
 {
+   g_IsMailServerProduct = DetectMailServerProduct();
    CWiz1     Wiz1;
    CWiz11    Wiz11;
    CWiz12    Wiz12;
@@ -127,7 +594,9 @@ void CEasyWizApp::StartSheet()
    char      *p, mPath[256], mFn[256], mCmpName[256], mMMLISTFn[256];
 
 #ifdef E_POST
-   CPropertySheet cPropSheet("EasyWiz - メールサーバ・SMTPサーバ設定");
+   CString sheetTitle;
+   sheetTitle.Format("EasyWiz2 - %s設定", (LPCTSTR)GetProductDisplayName());
+   CPropertySheet cPropSheet(sheetTitle);
 #else
    CPropertySheet cPropSheet("SPA-PRO Mail Server 簡単設定ウィザード");
 #endif
@@ -156,18 +625,21 @@ void CEasyWizApp::StartSheet()
   //////////////////////////////////////////////////////
   Wiz1.m_Sel = 0;
   Wiz11.m_LocalGroup = (CString)"";
+  Wiz11.m_LocalUser = (CString)"";
   Wiz12.m_PDC = (CString)"";
   Wiz12.m_LocalGroup = (CString)"";
+  Wiz12.m_ADUser = (CString)"";
+  Wiz12.m_ADPassword = (CString)"";
   Wiz2.m_DNS1 = (CString)"";
   Wiz2.m_DNS2 = (CString)""; 
   Wiz2.m_DNS3 = (CString)"";
-  Wiz3.m_Name1 = (CString)"test-sample.jp";
+  Wiz3.m_Name1 = (CString)"test-sample.home.local";
   Wiz3.m_Name2 = (CString)"";
   Wiz3.m_Name3 = (CString)"";
   Wiz3.m_IP1 = GetPrimaryIPv4Address();
   Wiz3.m_IP2 = (CString)"";
   Wiz3.m_IP3 = (CString)"";
-  Wiz4.m_Postmaster = GenerateRandomMailAddress("test-sample.jp");
+  Wiz4.m_Postmaster = (CString)"administrator@test-sample.home.local";
   //////////////////////////////////////////////////////
 #ifdef E_POST
   FILE *fp;
@@ -248,7 +720,7 @@ void CEasyWizApp::StartSheet()
 		   CHAR    mMess[256];
            m.LoadString(IDS_STRING115);
            sprintf(mMess, (LPCSTR)m, mSpool);
-		   MessageBox(NULL, mMess, "EasyWiz", MB_ICONSTOP | MB_OK);
+		   MessageBox(NULL, mMess, "EasyWiz2", MB_ICONSTOP | MB_OK);
 		   _exit(-1);
 		 }
 	   }
@@ -361,12 +833,23 @@ void CEasyWizApp::StartSheet()
 	 //AfxMessageBox( mMailbox, MB_OK);
      WriteProfileStringEx(SOFT_REG,"MailInBoxDir", mMailbox); // メールボックスフォルダ
      //SMTP認証
-	 //WriteProfileIntEx(SYSTEM_SMTPRS_REG, "SMTPAUTHOnly", 2);
-     //WriteProfileStringEx(SYSTEM_SMTPRS_REG, "SMTPAUTHMode", "PLAIN LOGIN CRAM-MD5"); //mSMTPAUTHMODE
+	 //AD連携の自己送受信テストはSMTP AUTHを使わず、ローカル宛の
+	 //通常受信として確認する。中継制限はE-POSTの別設定で維持される。
+	 if (Wiz1.m_Sel == 2) {
+	   WriteProfileIntEx(SYSTEM_SMTPRS_REG, "SMTPAUTHOnly", 0);
+	   WriteProfileStringEx(SYSTEM_SMTPRS_REG, "SMTPAUTHMode", "PLAIN LOGIN CRAM-MD5");
+	 }
      //VRFY,EXPNへの応答の有無
 	 WriteProfileIntEx(SOFT_REG, "Vrfy", FALSE);
      /////////////////////////////////	
 
+     CString windowsGroupDetail;
+     BOOL windowsGroupReady = TRUE;
+     if (Wiz1.m_Sel == 1) {
+       windowsGroupReady = EnsureWindowsMailGroup(Wiz3.m_Name1,
+          Wiz11.m_LocalUser, windowsGroupDetail);
+       Wiz11.m_LocalGroup = Wiz3.m_Name1;
+     }
      WriteProfileIntEx(SOFT_REG, "UserManager", (INT)(Wiz1.m_Sel == 0 ? 0 : 1));
 	 if (Wiz1.m_Sel == 0) { // SoftAccount管理
        char mLongPath[256],  mShortPath[256];
@@ -389,7 +872,11 @@ void CEasyWizApp::StartSheet()
        WriteProfileStringEx(SOFT_REG, "MailGroup", (char *)((const char *)Wiz11.m_LocalGroup));  // ローカルグループ設定
 	   UserRight((char *)((const char *)Wiz11.m_LocalGroup), "", TRUE);                        // 「バッチジョブによるログオン権利設定」
 	 } else if (Wiz1.m_Sel == 2) {
-       WriteProfileStringEx(SOFT_REG,"Membership", (char *)((const char *)Wiz12.m_PDC)); // PDCのアカウントを有効にする。
+	   // 画面では分かりやすいDNSドメイン名を選択可能にするが、E-POSTの
+	   // Windowsアカウント参照には参加先のNetBIOSドメイン名を保存する。
+	   CString windowsDomain = GetJoinedWindowsDomainName();
+	   if (windowsDomain.IsEmpty()) windowsDomain = Wiz12.m_PDC;
+       WriteProfileStringEx(SOFT_REG,"Membership", (char *)((const char *)windowsDomain)); // PDCのアカウントを有効にする。
        WriteProfileStringEx(SOFT_REG, "MailGroup", (char *)((const char *)Wiz12.m_LocalGroup));  // ローカルグループ設定
 #ifdef UPDATE_20070124 // "<ドメイン名>\Domain Users"をローカルポリシーの「バッチジョブのログオン権限に定義」
 	   if (Wiz12.m_PDC[0]) { // PDCにドメイン名があるなら
@@ -404,7 +891,7 @@ void CEasyWizApp::StartSheet()
        AddLocalGroupAccount(NULL, NULL, mDGAccount, (char *)((const char *)Wiz12.m_LocalGroup));
 	   UserRight((char *)((const char *)Wiz12.m_LocalGroup), NULL, TRUE);                        // 「バッチジョブによるログオン権利設定」
 #endif
-	   UserRight((char *)((const char *)Wiz12.m_LocalGroup), (char *)((const char *)Wiz12.m_PDC), TRUE);                        // 「バッチジョブによるログオン権利設定」
+	   UserRight((char *)((const char *)Wiz12.m_LocalGroup), (char *)((const char *)windowsDomain), TRUE);                        // 「バッチジョブによるログオン権利設定」
 	 }
 	 CString mDNS = (CString) "";
 	 if (Wiz2.m_DNS1 != (CString)"")
@@ -527,8 +1014,76 @@ void CEasyWizApp::StartSheet()
 
      // 設定後の作業を自動化する。Mail Server製品ではPOP3/IMAPも確認する。
      CString verifyAddress = Wiz3.m_IP1.IsEmpty() ? CString("127.0.0.1") : Wiz3.m_IP1;
-     CString verification = RunMailServerVerification(verifyAddress, Wiz4.m_Postmaster, nProductcode == 0);
-     MessageBox(NULL, verification, "EasyWiz - メールサーバ設定・疎通テスト結果", MB_OK | MB_ICONINFORMATION);
+     CString testAddress;
+     if (Wiz1.m_Sel == 0) {
+       // Soft Account用のテストユーザーは、管理者アドレスと分離する。
+       testAddress = GenerateRandomMailAddress(Wiz3.m_Name1);
+     } else if (Wiz1.m_Sel == 1) {
+       CString accountName = Wiz11.m_LocalUser;
+       if (windowsGroupReady && !accountName.IsEmpty())
+         testAddress.Format("%s@%s", (LPCTSTR)accountName,
+            (LPCTSTR)Wiz3.m_Name1);
+     } else if (Wiz1.m_Sel == 2) {
+       // 認証対象としてユーザーが指定したADアカウントと、テストメールの
+       // ローカル部を一致させる（ウィザード実行者とは限らない）。
+       CString accountName = Wiz12.m_ADUser;
+       int slash = accountName.ReverseFind('\\');
+       if (slash >= 0) accountName = accountName.Mid(slash + 1);
+       CString adMailDomain = Wiz3.m_Name1;
+       int at = accountName.Find('@');
+       if (at > 0) {
+         adMailDomain = accountName.Mid(at + 1);
+         accountName = accountName.Left(at);
+       }
+       accountName.TrimLeft();
+       accountName.TrimRight();
+       if (!accountName.IsEmpty())
+         testAddress.Format("%s@%s", (LPCTSTR)accountName,
+            (LPCTSTR)adMailDomain);
+     }
+     CString verification = RunMailServerVerification(verifyAddress,
+        testAddress, IsMailServerProduct(), Wiz1.m_Sel,
+        Wiz1.m_Sel == 2 ? (LPCTSTR)Wiz12.m_ADUser : NULL,
+        Wiz1.m_Sel == 2 ? (LPCTSTR)Wiz12.m_ADPassword : NULL,
+        Wiz1.m_Sel == 2 ? (LPCTSTR)Wiz12.m_PDC : NULL,
+        Wiz1.m_Sel == 2 ? (LPCTSTR)Wiz12.m_LocalGroup : NULL,
+        mMailbox);
+     if (!Wiz12.m_ADPassword.IsEmpty()) {
+       LPTSTR passwordBuffer = Wiz12.m_ADPassword.GetBuffer(Wiz12.m_ADPassword.GetLength());
+       SecureZeroMemory(passwordBuffer, Wiz12.m_ADPassword.GetLength());
+       Wiz12.m_ADPassword.ReleaseBuffer(0);
+     }
+     if (Wiz1.m_Sel == 1) {
+       CString groupResult;
+       groupResult.Format("[%s] Windowsメールグループ: %s\r\n",
+          windowsGroupReady ? "OK" : "要確認", (LPCTSTR)windowsGroupDetail);
+       int headerEnd = verification.Find("\r\n\r\n");
+       if (headerEnd >= 0)
+          verification.Insert(headerEnd + 4, groupResult);
+       else
+          verification = groupResult + verification;
+     }
+     CString verificationTitle;
+     verificationTitle.Format("EasyWiz2 - %s設定・疎通テスト結果", (LPCTSTR)GetProductDisplayName());
+     CString evidencePath;
+     CString evidenceError;
+     BOOL evidenceSaved = SaveVerificationEvidence(verification, evidencePath, evidenceError);
+     if (evidenceSaved) {
+       verification += "\r\n[ログ保存] 設定結果を保存しました:\r\n";
+       verification += evidencePath;
+       verification += "\r\n";
+     } else {
+       verification += "\r\n[要確認] 設定結果ログを保存できませんでした: ";
+       verification += evidenceError;
+       verification += "\r\n";
+     }
+     ShowSelectableResultWindow(verificationTitle, verification);
+     if (evidenceSaved) {
+       CString explorerArguments;
+       explorerArguments.Format("/select,\"%s\"", (LPCTSTR)evidencePath);
+       ShellExecute(NULL, "open", "explorer.exe", explorerArguments,
+          NULL, SW_SHOWNORMAL);
+     }
 #ifdef REGTOFILE
   } else { // ウィザードキャンセル
      if (nClustering && !_strnicmp(PRODUCTS_ROOT, "software\\emwac", 14)) {
@@ -571,7 +1126,7 @@ void CEasyWizApp::StartSheet()
 		       CHAR    mMess[256];
                m.LoadString(IDS_STRING114);
                sprintf(mMess, (LPCSTR)m, FD.cFileName);
-		       if (MessageBox(NULL, mMess, "EasyWiz", MB_YESNO | MB_ICONWARNING) == IDYES)
+		       if (MessageBox(NULL, mMess, "EasyWiz2", MB_YESNO | MB_ICONWARNING) == IDYES)
                  CopyFile(mSrc, mDest, FALSE);
 		    }
             bF = FindNextFile( hF, &FD);
@@ -590,7 +1145,7 @@ void CEasyWizApp::StartSheet()
 		       CHAR    mMess[256];
                m.LoadString(IDS_STRING114);
                sprintf(mMess, (LPCSTR)m, FD.cFileName);
-		       if (MessageBox(NULL, mMess, "EasyWiz", MB_YESNO | MB_ICONWARNING) == IDYES)
+		       if (MessageBox(NULL, mMess, "EasyWiz2", MB_YESNO | MB_ICONWARNING) == IDYES)
                  CopyFile(mSrc, mDest, FALSE);
 		    }
             bF = FindNextFile( hF, &FD);
@@ -612,4 +1167,3 @@ void CEasyWizApp::StartSheet()
   WinExec("qset.exe", SW_SHOWNORMAL);
 #endif
 }
-
