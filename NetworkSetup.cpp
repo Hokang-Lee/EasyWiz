@@ -401,7 +401,7 @@ static BOOL RunAccountManagerImport(LPCTSTR mailAddress,
         "ファイル名をEasyWiz2が自動入力します。",
         (LPCTSTR)address);
       guidanceEmphasis =
-        "登録後にManagerを閉じると、EasyWiz2がテスト送信を続けます。\r\n"
+        "インポートして登録後にManagerを閉じると、EasyWiz2がテスト送信を続けます。\r\n"
         "一時ファイルはManager終了後に削除されます。";
     } else {
       guidance.Format(
@@ -411,7 +411,7 @@ static BOOL RunAccountManagerImport(LPCTSTR mailAddress,
         "ファイル名をEasyWiz2が自動入力します。",
         (LPCTSTR)address, (LPCTSTR)password);
       guidanceEmphasis =
-        "登録後にManagerを閉じると、EasyWiz2が登録確認とテスト送信を続けます。";
+        "インポートして登録後にManagerを閉じると、EasyWiz2が登録確認とテスト送信を続けます。";
     }
     ShowManagerGuidance(
         adAccount ? "EasyWiz2 - AD認証ファイル登録" :
