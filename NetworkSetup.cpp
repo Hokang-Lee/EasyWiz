@@ -183,6 +183,16 @@ static void PumpWaitingMessages()
     }
 }
 
+static void WaitWhileKeepingUiResponsive(DWORD milliseconds)
+{
+    DWORD started = GetTickCount();
+    do {
+        PumpWaitingMessages();
+        Sleep(50);
+    } while (GetTickCount() - started < milliseconds);
+    PumpWaitingMessages();
+}
+
 struct ManagerGuidanceWindowData
 {
     CString body;
@@ -496,7 +506,7 @@ static BOOL ResolveInboxFolder(LPCTSTR mailAddress,
                 return TRUE;
             }
         }
-        Sleep(500);
+        WaitWhileKeepingUiResponsive(500);
     }
 
     CString domainFolder = inboxRoot + "\\" + domain;
@@ -560,6 +570,10 @@ public:
 
     BOOL Create(BOOL includeMailboxProtocols)
     {
+        // 長いサービス・SMTP応答待ちでWindowsが代替の
+        // 「(応答なし)」ウィンドウを表示しないようにする。
+        // 待機中のメッセージ処理自体は各ループで継続する。
+        DisableProcessWindowsGhosting();
         CString className = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW,
             LoadCursor(NULL, IDC_WAIT), (HBRUSH)(COLOR_BTNFACE + 1), NULL);
         const DWORD style = WS_POPUP | WS_CAPTION | WS_VISIBLE;
@@ -802,7 +816,7 @@ static BOOL RestartServiceForSettings(LPCTSTR serviceName, CString& detail)
             return FALSE;
         }
         for (int i = 0; i < 120; ++i) {
-            Sleep(500);
+            WaitWhileKeepingUiResponsive(500);
             if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
                 (LPBYTE)&status, sizeof(status), &needed)) break;
             if (status.dwCurrentState == SERVICE_STOPPED) break;
@@ -828,7 +842,7 @@ static BOOL RestartServiceForSettings(LPCTSTR serviceName, CString& detail)
             return FALSE;
         }
         for (int i = 0; i < 120; ++i) {
-            Sleep(500);
+            WaitWhileKeepingUiResponsive(500);
             if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
                 (LPBYTE)&status, sizeof(status), &needed)) break;
             if (status.dwCurrentState == SERVICE_RUNNING) break;
@@ -847,28 +861,350 @@ static BOOL RestartServiceForSettings(LPCTSTR serviceName, CString& detail)
     return ok;
 }
 
+enum RequiredServiceState
+{
+    RequiredServiceMissing,
+    RequiredServiceRunning,
+    RequiredServiceNotRunning
+};
+
+static RequiredServiceState QueryRequiredServiceState(LPCTSTR serviceName)
+{
+    SC_HANDLE manager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
+    if (!manager) return RequiredServiceMissing;
+    SC_HANDLE service = OpenService(manager, serviceName, SERVICE_QUERY_STATUS);
+    if (!service) {
+        CloseServiceHandle(manager);
+        return RequiredServiceMissing;
+    }
+    SERVICE_STATUS_PROCESS status = {0};
+    DWORD needed = 0;
+    BOOL queried = QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
+        reinterpret_cast<LPBYTE>(&status), sizeof(status), &needed);
+    CloseServiceHandle(service);
+    CloseServiceHandle(manager);
+    if (!queried) return RequiredServiceNotRunning;
+    return status.dwCurrentState == SERVICE_RUNNING ?
+        RequiredServiceRunning : RequiredServiceNotRunning;
+}
+
+static BOOL OpenEPostMailControl()
+{
+    char modulePath[MAX_PATH] = {0};
+    GetModuleFileName(NULL, modulePath, MAX_PATH);
+    CString controlPath(modulePath);
+    int separator = controlPath.ReverseFind('\\');
+    if (separator >= 0)
+        controlPath = controlPath.Left(separator + 1) + "EpstControl.exe";
+    else
+        controlPath = "EpstControl.exe";
+    if (GetFileAttributes(controlPath) == INVALID_FILE_ATTRIBUTES)
+        return FALSE;
+    HINSTANCE result = ShellExecute(NULL, "open", controlPath, NULL, NULL,
+        SW_SHOWNORMAL);
+    return reinterpret_cast<INT_PTR>(result) > 32;
+}
+
+static BOOL ConfirmRequiredServicesRunning(BOOL includeMailboxProtocols,
+    CString& detail)
+{
+    LPCTSTR serviceNames[] = {
+        SMTPRS_SERVICE, SMTPDS_SERVICE, POP3_SERVICE, IMAP4_SERVICE
+    };
+    LPCTSTR displayNames[] = {
+        "SMTP受信サービス (epstrs)",
+        "SMTP配送サービス (epstds)",
+        "POP3サービス (epstpop3s)",
+        "IMAPサービス (epstimap4s)"
+    };
+    int serviceCount = includeMailboxProtocols ? 4 : 2;
+    BOOL controlOpened = FALSE;
+
+    for (;;) {
+        CString missing;
+        CString stopped;
+        for (int index = 0; index < serviceCount; ++index) {
+            RequiredServiceState state =
+                QueryRequiredServiceState(serviceNames[index]);
+            if (state == RequiredServiceMissing) {
+                if (!missing.IsEmpty()) missing += "\r\n";
+                missing += "・";
+                missing += displayNames[index];
+            } else if (state != RequiredServiceRunning) {
+                if (!stopped.IsEmpty()) stopped += "\r\n";
+                stopped += "・";
+                stopped += displayNames[index];
+            }
+        }
+
+        if (!missing.IsEmpty()) {
+            CString message =
+                "次のE-PostサービスがWindowsに登録されていません。\r\n\r\n" +
+                missing +
+                "\r\n\r\nインストール完了後に、E-Post Mail Controlの"
+                "「サービス制御」タブから状態を確認してください。\r\n"
+                "今回の疎通テストはスキップします。";
+            MessageBox(NULL, message, "EasyWiz2 - サービス確認",
+                MB_OK | MB_ICONWARNING | MB_TOPMOST | MB_SETFOREGROUND);
+            detail = "必要なE-Postサービスが未登録のため、疎通テストをスキップしました";
+            return FALSE;
+        }
+        if (stopped.IsEmpty()) {
+            detail = "必要なE-Postサービスがすべて実行中です";
+            return TRUE;
+        }
+
+        if (!controlOpened) {
+            controlOpened = OpenEPostMailControl();
+            WaitWhileKeepingUiResponsive(500);
+        }
+        CString message =
+            "次のE-Postサービスが開始されていません。\r\n\r\n" +
+            stopped +
+            "\r\n\r\nE-Post Mail Controlの「サービス制御」タブから"
+            "サービスを開始してください。\r\n\r\n"
+            "開始後に［再試行］を押してください。\r\n"
+            "［キャンセル］を押すと、今回の疎通テストをスキップします。";
+        int selected = MessageBox(NULL, message,
+            "EasyWiz2 - サービス開始の確認",
+            MB_RETRYCANCEL | MB_ICONINFORMATION |
+            MB_TOPMOST | MB_SETFOREGROUND);
+        if (selected != IDRETRY) {
+            detail = "サービスが開始されていないため、ユーザー操作により疎通テストをスキップしました";
+            return FALSE;
+        }
+    }
+}
+
+static BOOL FileContainsText(LPCTSTR path, LPCSTR keyword)
+{
+    HANDLE file = CreateFile(path, GENERIC_READ, FILE_SHARE_READ |
+        FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE) return FALSE;
+    DWORD size = GetFileSize(file, NULL);
+    if (size == INVALID_FILE_SIZE || size == 0 || size > 4 * 1024 * 1024) {
+        CloseHandle(file);
+        return FALSE;
+    }
+    char *buffer = new char[size + 1];
+    DWORD read = 0;
+    BOOL ok = ReadFile(file, buffer, size, &read, NULL);
+    CloseHandle(file);
+    buffer[ok ? read : 0] = 0;
+    BOOL found = ok && strstr(buffer, keyword) != NULL;
+    delete [] buffer;
+    return found;
+}
+
+static BOOL FindOAuthRefreshToken(const CString& directory)
+{
+    CString pattern = directory + "\\*";
+    WIN32_FIND_DATA data = {0};
+    HANDLE search = FindFirstFile(pattern, &data);
+    if (search == INVALID_HANDLE_VALUE) return FALSE;
+    BOOL found = FALSE;
+    do {
+        if (!strcmp(data.cFileName, ".") || !strcmp(data.cFileName, ".."))
+            continue;
+        CString path = directory + "\\" + data.cFileName;
+        if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            if (FindOAuthRefreshToken(path)) {
+                found = TRUE;
+                break;
+            }
+        } else if (!CString(data.cFileName).CompareNoCase("refresh_token.dat") &&
+            (data.nFileSizeHigh != 0 || data.nFileSizeLow != 0)) {
+            found = TRUE;
+            break;
+        }
+    } while (FindNextFile(search, &data));
+    FindClose(search);
+    return found;
+}
+
+static CString FindOAuthManagerPath()
+{
+    char modulePath[MAX_PATH] = {0};
+    GetModuleFileName(NULL, modulePath, MAX_PATH);
+    CString path(modulePath);
+    int separator = path.ReverseFind('\\');
+    if (separator >= 0)
+        path = path.Left(separator + 1) + "EPostOAuthManager.exe";
+    else
+        path = "EPostOAuthManager.exe";
+    if (GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES) return path;
+
+    char programFiles[MAX_PATH] = {0};
+    if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES, NULL,
+        SHGFP_TYPE_CURRENT, programFiles))) {
+        path = CString(programFiles) +
+            "\\EPostOAuthManager\\EPostOAuthManager.exe";
+        if (GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES) return path;
+    }
+    return "";
+}
+
+static CString QuoteOAuthArgument(LPCTSTR value)
+{
+    CString escaped(value ? value : "");
+    escaped.Replace("\"", "\\\"");
+    return "\"" + escaped + "\"";
+}
+
+static BOOL RunOAuthManagerIntegration(LPCTSTR smtpHost,
+    LPCTSTR gatewayUser, CString& detail)
+{
+    int selected = MessageBox(NULL,
+        "Microsoft 365のSMTP先進認証（OAuth 2.0）を設定しますか？\r\n\r\n"
+        "［はい］を選ぶとE-Post OAuth Managerを起動します。\r\n"
+        "認証情報の入力とMicrosoftへのログインはOAuth Managerで行います。\r\n"
+        "SMTP AUTHにはE-Post Account Managerのアカウントとパスワードが必要です。\r\n"
+        "パスワードが不明な場合は、Account Managerで変更してから入力してください。\r\n"
+        "EasyWiz2はパスワードやトークン本文を保存しません。",
+        "EasyWiz2 - SMTP先進認証",
+        MB_YESNO | MB_ICONQUESTION | MB_TOPMOST | MB_SETFOREGROUND);
+    if (selected != IDYES) {
+        detail = "ユーザー操作により設定を省略しました";
+        return FALSE;
+    }
+
+    CString managerPath = FindOAuthManagerPath();
+    if (managerPath.IsEmpty()) {
+        detail = "EPostOAuthManager.exeが見つかりません。EasyWiz2と同じフォルダ、またはProgram Files\\EPostOAuthManagerへ配置してください";
+        MessageBox(NULL, detail, "EasyWiz2 - SMTP先進認証",
+            MB_OK | MB_ICONWARNING | MB_TOPMOST | MB_SETFOREGROUND);
+        return FALSE;
+    }
+
+    SHELLEXECUTEINFO execute = {0};
+    execute.cbSize = sizeof(execute);
+    execute.fMask = SEE_MASK_NOCLOSEPROCESS;
+    execute.lpFile = managerPath;
+    CString parameters;
+    parameters.Format("--easywiz-smtp-host %s --easywiz-smtp-port 25 "
+        "--easywiz-gateway-user %s --easywiz-smtp-from %s",
+        (LPCTSTR)QuoteOAuthArgument(smtpHost),
+        (LPCTSTR)QuoteOAuthArgument(gatewayUser),
+        (LPCTSTR)QuoteOAuthArgument(gatewayUser));
+    execute.lpParameters = parameters;
+    execute.nShow = SW_SHOWNORMAL;
+    if (!ShellExecuteEx(&execute)) {
+        detail.Format("E-Post OAuth Managerを起動できません (Win32 %lu)",
+            GetLastError());
+        return FALSE;
+    }
+    if (execute.hProcess) {
+        WaitForInputIdle(execute.hProcess, 10000);
+        while (WaitForSingleObject(execute.hProcess, 100) == WAIT_TIMEOUT)
+            PumpWaitingMessages();
+        CloseHandle(execute.hProcess);
+    }
+
+    BOOL gatewayReady = FileContainsText(
+        "C:\\Program Files\\EPOST\\MS\\gateway.dat", "1XOAUTH2");
+    BOOL tokenReady = FindOAuthRefreshToken("C:\\mail\\oauth2");
+    if (gatewayReady && tokenReady) {
+        detail = "gateway.datのXOAUTH2設定と更新トークンファイルを確認しました";
+        return TRUE;
+    }
+    if (!gatewayReady && !tokenReady)
+        detail = "XOAUTH2設定と更新トークンファイルを確認できません";
+    else if (!gatewayReady)
+        detail = "gateway.datのXOAUTH2設定を確認できません";
+    else
+        detail = "更新トークンファイルを確認できません";
+    return FALSE;
+}
+
 static SOCKET ConnectServer(LPCTSTR address, u_short port)
 {
-    SOCKET socketHandle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (socketHandle == INVALID_SOCKET) return INVALID_SOCKET;
-    // SMTP Receiverは接続元の逆引き等で挨拶応答に時間が掛かる場合がある。
-    DWORD timeout = 30000;
-    setsockopt(socketHandle, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout, sizeof(timeout));
-    setsockopt(socketHandle, SOL_SOCKET, SO_SNDTIMEO, (const char *)&timeout, sizeof(timeout));
-
-    sockaddr_in target = {0};
-    target.sin_family = AF_INET;
-    target.sin_port = htons(port);
-    if (InetPtonA(AF_INET, address, &target.sin_addr) != 1 ||
-        connect(socketHandle, (sockaddr *)&target, sizeof(target)) == SOCKET_ERROR) {
-        closesocket(socketHandle);
+    char service[16] = {0};
+    sprintf_s(service, "%u", static_cast<unsigned int>(port));
+    addrinfo hints = {0};
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    addrinfo *addresses = NULL;
+    if (!address || !address[0] ||
+        getaddrinfo(address, service, &hints, &addresses) != 0)
         return INVALID_SOCKET;
+
+    SOCKET connectedSocket = INVALID_SOCKET;
+    for (addrinfo *current = addresses; current; current = current->ai_next) {
+        SOCKET socketHandle = socket(current->ai_family, current->ai_socktype,
+            current->ai_protocol);
+        if (socketHandle == INVALID_SOCKET) continue;
+
+        u_long nonBlocking = 1;
+        ioctlsocket(socketHandle, FIONBIO, &nonBlocking);
+        int result = connect(socketHandle, current->ai_addr,
+            static_cast<int>(current->ai_addrlen));
+        if (result == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK) {
+            closesocket(socketHandle);
+            continue;
+        }
+
+        DWORD started = GetTickCount();
+        BOOL connected = result == 0;
+        while (!connected && GetTickCount() - started < 60000) {
+            fd_set writable;
+            FD_ZERO(&writable);
+            FD_SET(socketHandle, &writable);
+            timeval wait = {0, 100000};
+            int ready = select(0, NULL, &writable, NULL, &wait);
+            PumpWaitingMessages();
+            if (ready > 0) {
+                int socketError = 0;
+                int errorLength = sizeof(socketError);
+                if (getsockopt(socketHandle, SOL_SOCKET, SO_ERROR,
+                    reinterpret_cast<char *>(&socketError), &errorLength) == 0 &&
+                    socketError == 0)
+                    connected = TRUE;
+                break;
+            }
+            if (ready == SOCKET_ERROR) break;
+        }
+        if (connected) {
+            nonBlocking = 0;
+            ioctlsocket(socketHandle, FIONBIO, &nonBlocking);
+            DWORD timeout = 60000;
+            setsockopt(socketHandle, SOL_SOCKET, SO_RCVTIMEO,
+                reinterpret_cast<const char *>(&timeout), sizeof(timeout));
+            setsockopt(socketHandle, SOL_SOCKET, SO_SNDTIMEO,
+                reinterpret_cast<const char *>(&timeout), sizeof(timeout));
+            connectedSocket = socketHandle;
+            break;
+        }
+        closesocket(socketHandle);
     }
-    return socketHandle;
+    freeaddrinfo(addresses);
+    return connectedSocket;
 }
 
 static BOOL ReceivePositiveReply(SOCKET socketHandle, CString& reply)
 {
+    // E-Postは逆引き等で応答に時間が掛かることがある。最大60秒待つ間も
+    // Windowsメッセージを処理し、「応答なし」と表示されないようにする。
+    DWORD started = GetTickCount();
+    for (;;) {
+        fd_set readable;
+        FD_ZERO(&readable);
+        FD_SET(socketHandle, &readable);
+        timeval wait = {0, 100000};
+        int ready = select(0, &readable, NULL, NULL, &wait);
+        PumpWaitingMessages();
+        if (ready > 0) break;
+        if (ready == SOCKET_ERROR) {
+            reply.Format("応答待ち中に受信エラーが発生しました (Winsock %d)",
+                WSAGetLastError());
+            return FALSE;
+        }
+        if (GetTickCount() - started >= 60000) {
+            reply = "60秒待機しましたが応答を確認できませんでした";
+            return FALSE;
+        }
+    }
+
     char buffer[1024] = {0};
     int received = recv(socketHandle, buffer, sizeof(buffer) - 1, 0);
     if (received <= 0) {
@@ -1166,6 +1502,10 @@ CString RunMailServerVerification(LPCTSTR serverAddress, LPCTSTR testAddress,
     HRESULT initResult = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     BOOL uninitialize = SUCCEEDED(initResult);
     CString inboxFolderToOpen;
+    CString inboxFolderDetail;
+    BOOL inboxFolderChecked = FALSE;
+    BOOL inboxFolderFound = FALSE;
+    BOOL oauthRequested = FALSE;
 
     CString detail;
     progress.SetStatus("x64版メールサービスへ設定を同期しています...");
@@ -1198,24 +1538,50 @@ CString RunMailServerVerification(LPCTSTR serverAddress, LPCTSTR testAddress,
         AppendResult(report, ports[i].name, SUCCEEDED(hr), SUCCEEDED(hr) ? CString("許可済み") : HResultText(hr));
     }
 
-    progress.SetStatus("SMTP受信サービスへ設定を反映しています...");
-    BOOL smtpReceiver = RestartServiceForSettings(SMTPRS_SERVICE, detail);
-    AppendResult(report, "SMTP受信サービス", smtpReceiver, detail);
-    progress.SetStatus("SMTP配送サービスへ設定を反映しています...");
-    BOOL smtpDelivery = RestartServiceForSettings(SMTPDS_SERVICE, detail);
-    AppendResult(report, "SMTP配送サービス", smtpDelivery, detail);
-    if (includeMailboxProtocols) {
-        progress.SetStatus("POP3サービスへ設定を反映しています...");
-        BOOL pop = RestartServiceForSettings(POP3_SERVICE, detail);
-        AppendResult(report, "POP3サービス", pop, detail);
-        progress.SetStatus("IMAPサービスへ設定を反映しています...");
-        BOOL imap = RestartServiceForSettings(IMAP4_SERVICE, detail);
-        AppendResult(report, "IMAPサービス", imap, detail);
+    progress.SetStatus("E-Postサービスの開始状態を確認しています...");
+    BOOL servicesReady = ConfirmRequiredServicesRunning(
+        includeMailboxProtocols, detail);
+    if (servicesReady)
+        AppendResult(report, "サービス開始確認", TRUE, detail);
+    else
+        AppendSkipped(report, "サービス開始確認", detail);
+
+    BOOL smtpReceiver = FALSE;
+    BOOL smtpDelivery = FALSE;
+    if (servicesReady) {
+        progress.SetStatus("SMTP受信サービスへ設定を反映しています...");
+        smtpReceiver = RestartServiceForSettings(SMTPRS_SERVICE, detail);
+        AppendResult(report, "SMTP受信サービス", smtpReceiver, detail);
+        progress.SetStatus("SMTP配送サービスへ設定を反映しています...");
+        smtpDelivery = RestartServiceForSettings(SMTPDS_SERVICE, detail);
+        AppendResult(report, "SMTP配送サービス", smtpDelivery, detail);
+        if (includeMailboxProtocols) {
+            progress.SetStatus("POP3サービスへ設定を反映しています...");
+            BOOL pop = RestartServiceForSettings(POP3_SERVICE, detail);
+            AppendResult(report, "POP3サービス", pop, detail);
+            progress.SetStatus("IMAPサービスへ設定を反映しています...");
+            BOOL imap = RestartServiceForSettings(IMAP4_SERVICE, detail);
+            AppendResult(report, "IMAPサービス", imap, detail);
+        }
+    } else {
+        AppendSkipped(report, "SMTP受信サービス", "サービス開始待ちのため設定反映をスキップしました");
+        AppendSkipped(report, "SMTP配送サービス", "サービス開始待ちのため設定反映をスキップしました");
+        if (includeMailboxProtocols) {
+            AppendSkipped(report, "POP3サービス", "サービス開始待ちのため設定反映をスキップしました");
+            AppendSkipped(report, "IMAPサービス", "サービス開始待ちのため設定反映をスキップしました");
+        }
     }
 
     WSADATA winsock = {0};
-    if (WSAStartup(MAKEWORD(2, 2), &winsock) == 0) {
-        progress.SetStatus("SMTPの応答を確認しています...");
+    if (!servicesReady) {
+        AppendSkipped(report, "SMTP疎通", "必要なサービスが開始されていないため実施していません");
+        if (includeMailboxProtocols) {
+            AppendSkipped(report, "POP3疎通", "必要なサービスが開始されていないため実施していません");
+            AppendSkipped(report, "IMAP疎通", "必要なサービスが開始されていないため実施していません");
+        }
+        AppendSkipped(report, "テストメール", "必要なサービスが開始されていないため送信していません");
+    } else if (WSAStartup(MAKEWORD(2, 2), &winsock) == 0) {
+        progress.SetStatus("SMTPの応答を確認しています（最大60秒、しばらくお待ちください）...");
         BOOL smtp = ProbeProtocol(serverAddress, 25, detail);
         AppendResult(report, "SMTP疎通", smtp, detail);
         if (includeMailboxProtocols) {
@@ -1237,7 +1603,7 @@ CString RunMailServerVerification(LPCTSTR serverAddress, LPCTSTR testAddress,
             AppendSkipped(report, "テストメール",
                 "AD資格情報またはメールグループ所属を確認できないため送信していません");
         } else {
-          progress.SetStatus("テストメールを送信しています（最大30秒）...");
+          progress.SetStatus("テストメールを送信しています（応答待ちは最大60秒）...");
           BOOL recipientNotRegistered = FALSE;
           // AD連携は既存UPNの自己送受信をローカル配送として確認する。
           // AD資格情報はWindowsで事前確認済みのためSMTP AUTHは行わない。
@@ -1254,15 +1620,74 @@ CString RunMailServerVerification(LPCTSTR serverAddress, LPCTSTR testAddress,
             AppendResult(report, "テストメール", mail, detail);
             if (mail) {
                 progress.SetStatus("テストメールの受信フォルダを確認しています...");
-                BOOL inboxFound = ResolveInboxFolder(testAddress,
-                    configuredInboxTemplate, inboxFolderToOpen, detail);
-                AppendResult(report, "受信フォルダ", inboxFound, detail);
+                inboxFolderFound = ResolveInboxFolder(testAddress,
+                    configuredInboxTemplate, inboxFolderToOpen,
+                    inboxFolderDetail);
+                inboxFolderChecked = TRUE;
             }
           }
         }
         WSACleanup();
     } else {
         AppendResult(report, "ネットワーク診断", FALSE, "Winsockを初期化できません");
+    }
+
+    // Microsoft 365向けのOAuth設定は、通常のサーバー設定と疎通確認が
+    // 終わった後に、専用ツールへ引き継ぐ。EasyWiz2自身は資格情報を保持しない。
+    if (!servicesReady) {
+        AppendSkipped(report, "SMTP先進認証",
+            "必要なサービスが開始されていないため実施していません");
+    } else {
+        progress.SetStatus("SMTP先進認証の設定を確認しています...");
+        CString oauthDetail;
+        CString oauthServiceDetail;
+        BOOL oauthServicesReady = ConfirmRequiredServicesRunning(
+            FALSE, oauthServiceDetail);
+        if (oauthServicesReady)
+            AppendResult(report, "SMTP先進認証前サービス確認",
+                TRUE, oauthServiceDetail);
+        else
+            AppendSkipped(report, "SMTP先進認証前サービス確認",
+                oauthServiceDetail);
+
+        if (!oauthServicesReady) {
+            AppendSkipped(report, "SMTP先進認証",
+                "SMTPサービスが開始されていないため実施していません");
+        } else {
+        // 直前の通常SMTP疎通で使用した接続先をそのまま引き継ぎ、
+        // 名前解決を伴う重複確認による待ち時間を発生させない。
+        CString oauthHost(serverAddress ? serverAddress : "");
+        CString oauthHostDetail;
+        oauthHostDetail.Format("通常SMTP疎通で使用した接続先を使用します: %s:25",
+            (LPCTSTR)oauthHost);
+        AppendResult(report, "SMTP先進認証接続先", TRUE, oauthHostDetail);
+        BOOL oauthReady = RunOAuthManagerIntegration(oauthHost,
+            testAddress, oauthDetail);
+        if (!oauthDetail.Compare("ユーザー操作により設定を省略しました")) {
+            AppendSkipped(report, "SMTP先進認証", oauthDetail);
+        } else {
+            oauthRequested = TRUE;
+            AppendResult(report, "SMTP先進認証", oauthReady, oauthDetail);
+            if (oauthReady) {
+                progress.SetStatus("SMTP配送サービスへ先進認証設定を反映しています...");
+                BOOL oauthService = RestartServiceForSettings(
+                    SMTPDS_SERVICE, detail);
+                AppendResult(report, "SMTP先進認証・配送サービス",
+                    oauthService, detail);
+            }
+        }
+        }
+    }
+
+    if (inboxFolderChecked) {
+        if (oauthRequested) {
+            inboxFolderToOpen.Empty();
+            AppendSkipped(report, "受信フォルダ表示",
+                "SMTP先進認証を実施したため、ローカルテストメールの受信フォルダは表示しません");
+        } else {
+            AppendResult(report, "受信フォルダ", inboxFolderFound,
+                inboxFolderDetail);
+        }
     }
 
     if (uninitialize) CoUninitialize();
