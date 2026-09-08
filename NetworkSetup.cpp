@@ -1043,15 +1043,10 @@ static CString FindOAuthManagerPath()
         path = path.Left(separator + 1) + "EPostOAuthManager.exe";
     else
         path = "EPostOAuthManager.exe";
-    if (GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES) return path;
-
-    char programFiles[MAX_PATH] = {0};
-    if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES, NULL,
-        SHGFP_TYPE_CURRENT, programFiles))) {
-        path = CString(programFiles) +
-            "\\EPostOAuthManager\\EPostOAuthManager.exe";
-        if (GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES) return path;
-    }
+    DWORD attributes = GetFileAttributes(path);
+    if (attributes != INVALID_FILE_ATTRIBUTES &&
+        !(attributes & FILE_ATTRIBUTE_DIRECTORY))
+        return path;
     return "";
 }
 
@@ -1065,6 +1060,14 @@ static CString QuoteOAuthArgument(LPCTSTR value)
 static BOOL RunOAuthManagerIntegration(LPCTSTR smtpHost,
     LPCTSTR gatewayUser, CString& detail)
 {
+    // 先進認証の選択肢を表示する前に、同梱ツールを確認する。
+    // インストーラーへの組み込み漏れの場合は、設定を選ばせず終了する。
+    CString managerPath = FindOAuthManagerPath();
+    if (managerPath.IsEmpty()) {
+        detail = "EPostOAuthManager.exeが同梱されていないため実施しません";
+        return FALSE;
+    }
+
     int selected = MessageBox(NULL,
         "Microsoft 365のSMTP先進認証（OAuth 2.0）を設定しますか？\r\n\r\n"
         "［はい］を選ぶとE-Post OAuth Managerを起動します。\r\n"
@@ -1076,14 +1079,6 @@ static BOOL RunOAuthManagerIntegration(LPCTSTR smtpHost,
         MB_YESNO | MB_ICONQUESTION | MB_TOPMOST | MB_SETFOREGROUND);
     if (selected != IDYES) {
         detail = "ユーザー操作により設定を省略しました";
-        return FALSE;
-    }
-
-    CString managerPath = FindOAuthManagerPath();
-    if (managerPath.IsEmpty()) {
-        detail = "EPostOAuthManager.exeが見つかりません。EasyWiz2と同じフォルダ、またはProgram Files\\EPostOAuthManagerへ配置してください";
-        MessageBox(NULL, detail, "EasyWiz2 - SMTP先進認証",
-            MB_OK | MB_ICONWARNING | MB_TOPMOST | MB_SETFOREGROUND);
         return FALSE;
     }
 
@@ -1388,19 +1383,11 @@ static BOOL SendTestMail(LPCTSTR address, LPCTSTR recipient, CString& detail,
             return FALSE;
         }
     }
-    BOOL usedEmptyReturnPath = FALSE;
     if (ok) {
-        // 通常は管理者アドレスを送信元にする。旧版E-POSTがローカルアカウント
-        // 未作成を理由に拒否した場合は、RFC準拠の空Return-Pathで再試行する。
-        if (!SendSmtpCommand(socketHandle, CString("MAIL FROM:<") + recipient + ">", reply)) {
-            CString resetReply;
-            if (SendSmtpCommand(socketHandle, "RSET", resetReply) &&
-                SendSmtpCommand(socketHandle, "MAIL FROM:<>", reply)) {
-                usedEmptyReturnPath = TRUE;
-            } else {
-                ok = FALSE;
-            }
-        }
+        // 登録したテストアカウント自身を送信元にして確認する。
+        // 空Return-Pathへ切り替えると未登録状態を見落とすため再試行しない。
+        ok = SendSmtpCommand(socketHandle,
+            CString("MAIL FROM:<") + recipient + ">", reply);
     }
     if (ok) {
         ok = SendSmtpCommand(socketHandle, CString("RCPT TO:<") + recipient + ">", reply);
@@ -1433,9 +1420,8 @@ static BOOL SendTestMail(LPCTSTR address, LPCTSTR recipient, CString& detail,
     SendSmtpCommand(socketHandle, "QUIT", ignored);
     closesocket(socketHandle);
     if (ok)
-        detail = usedEmptyReturnPath ?
-            "テストメールを受け付けました（空Return-Pathを使用）" :
-            "テストメールを受け付けました";
+        detail.Format("登録済みテストアカウントでテストメールを受け付けました: %s",
+            recipient);
     else
         detail = CString("SMTPエラー: ") + reply;
     return ok;
@@ -1645,7 +1631,11 @@ CString RunMailServerVerification(LPCTSTR serverAddress, LPCTSTR testAddress,
 
     // Microsoft 365向けのOAuth設定は、通常のサーバー設定と疎通確認が
     // 終わった後に、専用ツールへ引き継ぐ。EasyWiz2自身は資格情報を保持しない。
-    if (!servicesReady) {
+    CString oauthManagerPath = FindOAuthManagerPath();
+    if (oauthManagerPath.IsEmpty()) {
+        // OAuth Managerが同梱されていない構成では、先進認証に関する
+        // 質問・サービス確認・証跡を一切出さず、通常設定として終了する。
+    } else if (!servicesReady) {
         AppendSkipped(report, "SMTP先進認証",
             "必要なサービスが開始されていないため実施していません");
     } else {
@@ -1674,7 +1664,9 @@ CString RunMailServerVerification(LPCTSTR serverAddress, LPCTSTR testAddress,
         AppendResult(report, "SMTP先進認証接続先", TRUE, oauthHostDetail);
         BOOL oauthReady = RunOAuthManagerIntegration(oauthHost,
             testAddress, oauthDetail);
-        if (!oauthDetail.Compare("ユーザー操作により設定を省略しました")) {
+        if (!oauthDetail.Compare("EPostOAuthManager.exeが同梱されていないため実施しません")) {
+            AppendSkipped(report, "SMTP先進認証", oauthDetail);
+        } else if (!oauthDetail.Compare("ユーザー操作により設定を省略しました")) {
             AppendSkipped(report, "SMTP先進認証", oauthDetail);
         } else {
             oauthRequested = TRUE;
