@@ -1683,14 +1683,8 @@ CString RunMailServerVerification(LPCTSTR serverAddress, LPCTSTR testAddress,
     }
 
     if (inboxFolderChecked) {
-        if (oauthRequested) {
-            inboxFolderToOpen.Empty();
-            AppendSkipped(report, "受信フォルダ表示",
-                "SMTP先進認証を実施したため、ローカルテストメールの受信フォルダは表示しません");
-        } else {
-            AppendResult(report, "受信フォルダ", inboxFolderFound,
-                inboxFolderDetail);
-        }
+        AppendResult(report, "受信フォルダ", inboxFolderFound,
+            inboxFolderDetail);
     }
 
     if (uninitialize) CoUninitialize();
