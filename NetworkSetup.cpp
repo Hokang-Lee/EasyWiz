@@ -733,6 +733,7 @@ CString GetPrimaryIPv4Address()
     }
 
     CString address;
+    CString linkLocalFallback;
     if (result == NO_ERROR) {
         for (PIP_ADAPTER_ADDRESSES adapter = adapters; adapter; adapter = adapter->Next) {
             if (adapter->OperStatus != IfOperStatusUp ||
@@ -745,14 +746,24 @@ CString GetPrimaryIPv4Address()
                 char text[INET_ADDRSTRLEN] = {0};
                 sockaddr_in *ipv4 = (sockaddr_in *)item->Address.lpSockaddr;
                 if (InetNtopA(AF_INET, &ipv4->sin_addr, text, sizeof(text))) {
-                    address = text;
-                    break;
+                    CString candidate(text);
+                    // 169.254/16は自己割り当て・クラスタ用であることが多い。
+                    // 通常のIPv4を優先し、他にない場合だけ候補として残す。
+                    if (candidate.Left(8) == "169.254.") {
+                        if (linkLocalFallback.IsEmpty())
+                            linkLocalFallback = candidate;
+                    } else {
+                        address = candidate;
+                        break;
+                    }
                 }
             }
             if (!address.IsEmpty()) break;
         }
     }
     free(adapters);
+    if (address.IsEmpty())
+        address = linkLocalFallback;
     return address;
 }
 

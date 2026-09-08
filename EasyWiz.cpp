@@ -47,6 +47,49 @@ CString mWiz8List;
 
 static BOOL g_IsMailServerProduct = FALSE;
 
+class CEasyWizPropertySheet : public CPropertySheet
+{
+public:
+  CEasyWizPropertySheet(LPCTSTR title, CWiz3 *domainPage,
+      CWiz4 *postmasterPage)
+    : CPropertySheet(title), m_domainPage(domainPage),
+      m_postmasterPage(postmasterPage), m_postmasterEdited(FALSE)
+  {
+  }
+
+protected:
+  virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam)
+  {
+    // ステップ3の［次へ］が押された時点の画面入力を、ステップ4の
+    // 管理者メールアドレスへ引き継ぐ。戻って変更した場合も追従する。
+    if (LOWORD(wParam) == ID_WIZNEXT &&
+        GetActivePage() == m_domainPage) {
+      m_domainPage->UpdateData(TRUE);
+      CString current = m_postmasterPage->m_Postmaster;
+      if (::IsWindow(m_postmasterPage->GetSafeHwnd())) {
+        m_postmasterPage->GetDlgItemText(IDC_EDIT_NAME1, current);
+        if (!m_lastInheritedAddress.IsEmpty() &&
+            current.CompareNoCase(m_lastInheritedAddress) != 0)
+          m_postmasterEdited = TRUE;
+      }
+      if (!m_postmasterEdited) {
+        CString inherited = "administrator@" + m_domainPage->m_Name1;
+        m_postmasterPage->m_Postmaster = inherited;
+        m_lastInheritedAddress = inherited;
+        if (::IsWindow(m_postmasterPage->GetSafeHwnd()))
+          m_postmasterPage->SetDlgItemText(IDC_EDIT_NAME1, inherited);
+      }
+    }
+    return CPropertySheet::OnCommand(wParam, lParam);
+  }
+
+private:
+  CWiz3 *m_domainPage;
+  CWiz4 *m_postmasterPage;
+  CString m_lastInheritedAddress;
+  BOOL m_postmasterEdited;
+};
+
 static CString GetJoinedWindowsDomainName()
 {
   LPWSTR joinedName = NULL;
@@ -596,9 +639,10 @@ void CEasyWizApp::StartSheet()
 #ifdef E_POST
    CString sheetTitle;
    sheetTitle.Format("EasyWiz2 - %s設定", (LPCTSTR)GetProductDisplayName());
-   CPropertySheet cPropSheet(sheetTitle);
+   CEasyWizPropertySheet cPropSheet(sheetTitle, &Wiz3, &Wiz4);
 #else
-   CPropertySheet cPropSheet("SPA-PRO Mail Server 簡単設定ウィザード");
+   CEasyWizPropertySheet cPropSheet(
+     "SPA-PRO Mail Server 簡単設定ウィザード", &Wiz3, &Wiz4);
 #endif
 
   cPropSheet.AddPage(&Wiz1);
